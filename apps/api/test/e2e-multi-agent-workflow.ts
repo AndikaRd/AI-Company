@@ -94,8 +94,8 @@ async function runEndToEndMultiAgentValidation() {
       prisma.employee.findUnique({ where: { employeeCode: 'VAC-RES-001' }, include: { agentConfig: true, department: true } }),
     ]);
 
-    if (!elena || !marcus || !alex || !sophia) {
-      throw new Error('Required organizational roles (Elena, Marcus, Alex, Sophia) are missing.');
+    if (!elena || !marcus || !alex || !sophia || !maya) {
+      throw new Error('Required organizational roles (Elena, Marcus, Alex, Sophia, Maya) are missing.');
     }
 
     console.log(`[Org Hierarchy] Verified active employees:`);
