@@ -1,5 +1,6 @@
 import React from 'react';
 import { Html } from '@react-three/drei';
+import { CharacterAnimationState } from '@vac/shared';
 
 interface CharacterAnchorProps {
   position: [number, number, number];
@@ -7,6 +8,7 @@ interface CharacterAnchorProps {
   departmentSlug: string;
   slotIndex: number;
   assignedAgentName?: string | null;
+  animationState?: CharacterAnimationState;
 }
 
 /**
@@ -20,6 +22,7 @@ export const CharacterAnchor: React.FC<CharacterAnchorProps> = ({
   departmentSlug,
   slotIndex,
   assignedAgentName = null,
+  animationState = 'idle',
 }) => {
   return (
     <group position={position} rotation={rotation}>
@@ -43,21 +46,22 @@ export const CharacterAnchor: React.FC<CharacterAnchorProps> = ({
         />
       </mesh>
 
-      {/* Future GLB Mount Indicator */}
+      {/* Future GLB Mount Indicator & Animation State */}
       {assignedAgentName ? (
         <Html position={[0, 1.2, 0]} center distanceFactor={15}>
-          <div className="px-2 py-0.5 rounded bg-surface/90 border border-cyan-500/40 text-[10px] text-cyan-300 font-mono whitespace-nowrap shadow-md pointer-events-none">
-            {assignedAgentName}
+          <div className="px-2 py-0.5 rounded bg-surface/90 border border-cyan-500/40 text-[10px] text-cyan-300 font-mono whitespace-nowrap shadow-md pointer-events-none flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+            <span>{assignedAgentName}</span>
+            <span className="text-[9px] text-slate-400 uppercase">[{animationState}]</span>
           </div>
         </Html>
       ) : (
         <Html position={[0, 0.7, 0]} center distanceFactor={18}>
           <div className="opacity-0 hover:opacity-100 transition-opacity px-1.5 py-0.5 rounded bg-slate-900/80 border border-slate-700 text-[9px] text-slate-400 font-mono whitespace-nowrap pointer-events-none">
-            Anchor: {departmentSlug}-{slotIndex} (Ready for GLB)
+            Anchor: {departmentSlug}-{slotIndex} (GLB Ready • {animationState})
           </div>
         </Html>
       )}
     </group>
   );
 };
-

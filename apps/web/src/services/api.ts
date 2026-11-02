@@ -50,6 +50,16 @@ class ApiService {
     return this.request('/companies/active');
   }
 
+  async updateCompany(
+    id: string,
+    data: Partial<Company>,
+  ): Promise<Company & { departments: DepartmentWithCounts[] }> {
+    return this.request(`/companies/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
   async getDepartments(): Promise<DepartmentWithCounts[]> {
     return this.request('/departments');
   }
@@ -60,4 +70,3 @@ class ApiService {
 }
 
 export const api = new ApiService();
-

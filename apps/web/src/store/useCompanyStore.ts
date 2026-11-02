@@ -13,9 +13,10 @@ interface CompanyState {
 
   fetchData: () => Promise<void>;
   fetchHealth: () => Promise<void>;
+  updateCompanyProfile: (data: Partial<Company>) => Promise<void>;
 }
 
-export const useCompanyStore = create<CompanyState>((set) => ({
+export const useCompanyStore = create<CompanyState>((set, get) => ({
   company: null,
   departments: [],
   employeeStats: {
@@ -67,5 +68,22 @@ export const useCompanyStore = create<CompanyState>((set) => ({
       }));
     }
   },
-}));
 
+  updateCompanyProfile: async (data: Partial<Company>) => {
+    const current = get().company;
+    if (!current?.id) return;
+
+    try {
+      const updated = await api.updateCompany(current.id, data);
+      set((state) => ({
+        company: {
+          ...state.company!,
+          ...updated,
+          departments: updated.departments || state.company?.departments || [],
+        },
+      }));
+    } catch (err: any) {
+      throw err;
+    }
+  },
+}));

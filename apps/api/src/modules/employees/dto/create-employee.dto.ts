@@ -22,19 +22,49 @@ export enum EmployeeStatusEnum {
   OFFLINE = 'OFFLINE',
 }
 
+export enum SeniorityLevelEnum {
+  INTERN = 'INTERN',
+  JUNIOR = 'JUNIOR',
+  MID = 'MID',
+  SENIOR = 'SENIOR',
+  LEAD = 'LEAD',
+  PRINCIPAL = 'PRINCIPAL',
+  EXECUTIVE = 'EXECUTIVE',
+}
+
+export enum AiProviderEnum {
+  OLLAMA = 'OLLAMA',
+  OPENAI = 'OPENAI',
+  ANTHROPIC = 'ANTHROPIC',
+}
+
+export enum AutonomyLevelEnum {
+  MANUAL = 'MANUAL',
+  SUPERVISED = 'SUPERVISED',
+  AUTONOMOUS = 'AUTONOMOUS',
+}
+
 export enum MemoryRetentionEnum {
   SESSION = 'SESSION',
   LONG_TERM = 'LONG_TERM',
 }
 
 export class AgentConfigurationDto {
-  @IsString()
+  @IsEnum(AiProviderEnum)
   @IsOptional()
-  modelName?: string = 'gpt-4o';
+  provider?: AiProviderEnum = AiProviderEnum.OLLAMA;
 
   @IsString()
   @IsOptional()
-  @MaxLength(2000)
+  modelName?: string = 'qwen3.5:4b';
+
+  @IsEnum(AutonomyLevelEnum)
+  @IsOptional()
+  autonomyLevel?: AutonomyLevelEnum = AutonomyLevelEnum.SUPERVISED;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(4000)
   systemPrompt?: string;
 
   @IsNumber()
@@ -52,12 +82,24 @@ export class AgentConfigurationDto {
   @IsOptional()
   toolsEnabled?: any;
 
+  @IsOptional()
+  permissionConfig?: any;
+
   @IsEnum(MemoryRetentionEnum)
   @IsOptional()
   memoryRetention?: MemoryRetentionEnum = MemoryRetentionEnum.SESSION;
+
+  @IsOptional()
+  memoryConfig?: any;
 }
 
 export class CreateEmployeeDto {
+  @IsString()
+  @IsOptional()
+  @MinLength(2)
+  @MaxLength(20)
+  employeeCode?: string;
+
   @IsString()
   @IsNotEmpty()
   @MinLength(1)
@@ -76,12 +118,39 @@ export class CreateEmployeeDto {
   @MaxLength(100)
   role: string;
 
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  jobTitle?: string;
+
+  @IsEnum(SeniorityLevelEnum)
+  @IsOptional()
+  seniority?: SeniorityLevelEnum = SeniorityLevelEnum.MID;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(1000)
+  personality?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  primaryExpertise?: string;
+
+  @IsOptional()
+  skills?: any;
+
   @IsEmail()
   email: string;
 
   @IsString()
   @IsOptional()
   avatarUrl?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(50)
+  workstationId?: string;
 
   @IsBoolean()
   @IsOptional()
@@ -95,9 +164,12 @@ export class CreateEmployeeDto {
   @IsNotEmpty()
   departmentId: string;
 
+  @IsUUID()
+  @IsOptional()
+  supervisorId?: string;
+
   @IsOptional()
   @ValidateNested()
   @Type(() => AgentConfigurationDto)
   agentConfig?: AgentConfigurationDto;
 }
-

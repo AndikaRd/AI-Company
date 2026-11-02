@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
+import { UpdateCompanyDto } from './dto/update-company.dto';
 
 @Injectable()
 export class CompanyService {
@@ -70,7 +71,12 @@ export class CompanyService {
   }
 
   async create(createCompanyDto: CreateCompanyDto) {
-    const slug = createCompanyDto.slug || createCompanyDto.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const slug =
+      createCompanyDto.slug ||
+      createCompanyDto.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
 
     const existing = await this.prisma.company.findUnique({
       where: { slug },
@@ -87,5 +93,37 @@ export class CompanyService {
       },
     });
   }
-}
 
+  async update(id: string, updateCompanyDto: UpdateCompanyDto) {
+    const existing = await this.prisma.company.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Company with ID "${id}" not found`);
+    }
+
+    if (updateCompanyDto.slug && updateCompanyDto.slug !== existing.slug) {
+      const slugConflict = await this.prisma.company.findUnique({
+        where: { slug: updateCompanyDto.slug },
+      });
+      if (slugConflict) {
+        throw new ConflictException(`Company with slug "${updateCompanyDto.slug}" already exists`);
+      }
+    }
+
+    return this.prisma.company.update({
+      where: { id },
+      data: updateCompanyDto,
+      include: {
+        departments: {
+          include: {
+            _count: {
+              select: { employees: true },
+            },
+          },
+        },
+      },
+    });
+  }
+}

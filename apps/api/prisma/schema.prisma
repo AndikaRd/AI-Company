@@ -23,6 +23,28 @@ enum EmployeeStatus {
   OFFLINE
 }
 
+enum SeniorityLevel {
+  INTERN
+  JUNIOR
+  MID
+  SENIOR
+  LEAD
+  PRINCIPAL
+  EXECUTIVE
+}
+
+enum AiProvider {
+  OLLAMA
+  OPENAI
+  ANTHROPIC
+}
+
+enum AutonomyLevel {
+  MANUAL
+  SUPERVISED
+  AUTONOMOUS
+}
+
 enum MemoryRetention {
   SESSION
   LONG_TERM
@@ -62,38 +84,52 @@ model Department {
 }
 
 model Employee {
-  id           String              @id @default(uuid())
-  firstName    String              @map("first_name")
-  lastName     String              @map("last_name")
-  role         String
-  email        String              @unique
-  avatarUrl    String?             @map("avatar_url")
-  isAiAgent    Boolean             @default(true) @map("is_ai_agent")
-  status       EmployeeStatus      @default(ACTIVE)
-  departmentId String              @map("department_id")
-  department   Department          @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  agentConfig  AgentConfiguration?
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
+  id               String              @id @default(uuid())
+  employeeCode     String?             @unique @map("employee_code")
+  firstName        String              @map("first_name")
+  lastName         String              @map("last_name")
+  role             String
+  jobTitle         String?             @map("job_title")
+  seniority        SeniorityLevel      @default(MID)
+  personality      String?             @db.Text
+  primaryExpertise String?             @map("primary_expertise")
+  skills           Json?
+  email            String              @unique
+  avatarUrl        String?             @map("avatar_url")
+  workstationId    String?             @map("workstation_id")
+  isAiAgent        Boolean             @default(true) @map("is_ai_agent")
+  status           EmployeeStatus      @default(ACTIVE)
+  departmentId     String              @map("department_id")
+  department       Department          @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  supervisorId     String?             @map("supervisor_id")
+  supervisor       Employee?           @relation("EmployeeSupervisor", fields: [supervisorId], references: [id], onDelete: SetNull)
+  subordinates     Employee[]          @relation("EmployeeSupervisor")
+  agentConfig      AgentConfiguration?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
 
   @@index([departmentId])
   @@index([status])
+  @@index([supervisorId])
   @@map("employees")
 }
 
 model AgentConfiguration {
-  id              String          @id @default(uuid())
-  employeeId      String          @unique @map("employee_id")
-  employee        Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  modelName       String          @default("gpt-4o") @map("model_name")
-  systemPrompt    String?         @map("system_prompt") @db.Text
-  temperature     Float           @default(0.7)
-  maxTokens       Int             @default(2048) @map("max_tokens")
-  toolsEnabled    Json?           @map("tools_enabled")
-  memoryRetention MemoryRetention @default(SESSION) @map("memory_retention")
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  id               String          @id @default(uuid())
+  employeeId       String          @unique @map("employee_id")
+  employee         Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  provider         AiProvider      @default(OLLAMA)
+  modelName        String          @default("qwen3.5:4b") @map("model_name")
+  autonomyLevel    AutonomyLevel   @default(SUPERVISED) @map("autonomy_level")
+  systemPrompt     String?         @map("system_prompt") @db.Text
+  temperature      Float           @default(0.7)
+  maxTokens        Int             @default(2048) @map("max_tokens")
+  toolsEnabled     Json?           @map("tools_enabled")
+  permissionConfig Json?           @map("permission_config")
+  memoryRetention  MemoryRetention @default(SESSION) @map("memory_retention")
+  memoryConfig     Json?           @map("memory_config")
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 
   @@map("agent_configurations")
 }
-

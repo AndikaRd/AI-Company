@@ -12,6 +12,14 @@ export class EmployeesService {
       include: {
         department: true,
         agentConfig: true,
+        supervisor: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -43,6 +51,8 @@ export class EmployeesService {
       include: {
         department: true,
         agentConfig: true,
+        supervisor: true,
+        subordinates: true,
       },
     });
 
@@ -54,7 +64,7 @@ export class EmployeesService {
   }
 
   async create(createEmployeeDto: CreateEmployeeDto) {
-    const { agentConfig, departmentId, ...employeeData } = createEmployeeDto;
+    const { agentConfig, departmentId, supervisorId, ...employeeData } = createEmployeeDto;
 
     const department = await this.prisma.department.findUnique({
       where: { id: departmentId },
@@ -72,10 +82,20 @@ export class EmployeesService {
       throw new ConflictException(`Employee with email "${employeeData.email}" already exists`);
     }
 
+    if (supervisorId) {
+      const supervisor = await this.prisma.employee.findUnique({
+        where: { id: supervisorId },
+      });
+      if (!supervisor) {
+        throw new NotFoundException(`Supervisor with ID "${supervisorId}" not found`);
+      }
+    }
+
     return this.prisma.employee.create({
       data: {
         ...employeeData,
         departmentId,
+        supervisorId,
         ...(agentConfig
           ? {
               agentConfig: {
@@ -87,8 +107,8 @@ export class EmployeesService {
       include: {
         department: true,
         agentConfig: true,
+        supervisor: true,
       },
     });
   }
 }
-
