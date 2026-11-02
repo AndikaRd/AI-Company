@@ -1,0 +1,14 @@
+{
+  "name": "@vac/shared",
+  "version": "0.1.0",
+  "description": "Shared interfaces and constants for Virtual AI Company",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  }
+}

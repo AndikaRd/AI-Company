@@ -1,0 +1,98 @@
+// Virtual AI Company (VAC) - Prisma Schema
+// Database Engine: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CompanyStatus {
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  IDLE
+  BUSY
+  OFFLINE
+}
+
+enum MemoryRetention {
+  SESSION
+  LONG_TERM
+}
+
+model Company {
+  id          String         @id @default(uuid())
+  name        String
+  slug        String         @unique
+  description String?
+  industry    String?
+  website     String?
+  status      CompanyStatus  @default(ACTIVE)
+  departments Department[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@map("companies")
+}
+
+model Department {
+  id          String     @id @default(uuid())
+  name        String
+  slug        String
+  description String?
+  floorZone   String?    @map("floor_zone")
+  color       String?
+  companyId   String     @map("company_id")
+  company     Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employees   Employee[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([companyId, slug])
+  @@index([companyId])
+  @@map("departments")
+}
+
+model Employee {
+  id           String              @id @default(uuid())
+  firstName    String              @map("first_name")
+  lastName     String              @map("last_name")
+  role         String
+  email        String              @unique
+  avatarUrl    String?             @map("avatar_url")
+  isAiAgent    Boolean             @default(true) @map("is_ai_agent")
+  status       EmployeeStatus      @default(ACTIVE)
+  departmentId String              @map("department_id")
+  department   Department          @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  agentConfig  AgentConfiguration?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([departmentId])
+  @@index([status])
+  @@map("employees")
+}
+
+model AgentConfiguration {
+  id              String          @id @default(uuid())
+  employeeId      String          @unique @map("employee_id")
+  employee        Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  modelName       String          @default("gpt-4o") @map("model_name")
+  systemPrompt    String?         @map("system_prompt") @db.Text
+  temperature     Float           @default(0.7)
+  maxTokens       Int             @default(2048) @map("max_tokens")
+  toolsEnabled    Json?           @map("tools_enabled")
+  memoryRetention MemoryRetention @default(SESSION) @map("memory_retention")
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@map("agent_configurations")
+}

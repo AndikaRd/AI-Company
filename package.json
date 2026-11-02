@@ -1,0 +1,27 @@
+{
+  "name": "virtual-ai-company",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Virtual AI Company - Isometric 3D Virtual Office & AI Workforce Management Platform",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @vac/api --filter @vac/web dev",
+    "dev:api": "pnpm --filter @vac/api dev",
+    "dev:web": "pnpm --filter @vac/web dev",
+    "build": "pnpm --filter @vac/shared build && pnpm --filter @vac/validators build && pnpm --filter @vac/api build && pnpm --filter @vac/web build",
+    "build:packages": "pnpm --filter @vac/shared build && pnpm --filter @vac/validators build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "db:migrate": "pnpm --filter @vac/api prisma:migrate",
+    "db:generate": "pnpm --filter @vac/api prisma:generate",
+    "db:seed": "pnpm --filter @vac/api prisma:seed",
+    "db:studio": "pnpm --filter @vac/api prisma:studio"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4"
+  },
+  "packageManager": "pnpm@12.16.1",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

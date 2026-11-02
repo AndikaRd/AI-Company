@@ -1,0 +1,18 @@
+{
+  "name": "@vac/validators",
+  "version": "0.1.0",
+  "description": "Validation schemas for Virtual AI Company",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@vac/shared": "workspace:*",
+    "typescript": "^5.5.4"
+  }
+}
