@@ -1,5 +1,7 @@
 import React from 'react';
 import { CharacterAnchor } from './CharacterAnchor';
+import { CharacterModel } from './CharacterModel';
+import { Employee } from '@vac/shared';
 
 interface WorkstationProps {
   position: [number, number, number];
@@ -7,6 +9,8 @@ interface WorkstationProps {
   screenColor?: string;
   departmentSlug: string;
   slotIndex: number;
+  assignedAgent?: Employee | null;
+  onSelectAgent?: (employeeId: string) => void;
 }
 
 export const Workstation: React.FC<WorkstationProps> = ({
@@ -15,6 +19,8 @@ export const Workstation: React.FC<WorkstationProps> = ({
   screenColor = '#38bdf8',
   departmentSlug,
   slotIndex,
+  assignedAgent = null,
+  onSelectAgent,
 }) => {
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
@@ -103,13 +109,26 @@ export const Workstation: React.FC<WorkstationProps> = ({
         </mesh>
       </group>
 
-      {/* Character Placement Anchor */}
-      <CharacterAnchor
-        position={[0, 0, 0.55]}
-        departmentSlug={departmentSlug}
-        slotIndex={slotIndex}
-      />
+      {/* Render Character Model if an Agent is assigned to this workstation */}
+      {assignedAgent ? (
+        <CharacterModel
+          employeeId={assignedAgent.id}
+          employeeCode={assignedAgent.employeeCode ?? undefined}
+          name={`${assignedAgent.firstName} ${assignedAgent.lastName}`}
+          modelUrl={assignedAgent.avatarUrl || '/assets/characters/alex.glb'}
+          animationState="working"
+          position={[0, 0, 0.55]}
+          rotationY={Math.PI} // Faces towards desk monitor
+          onSelectAgent={onSelectAgent}
+        />
+      ) : (
+        /* Anchor coordinates indicator for empty workstation */
+        <CharacterAnchor
+          position={[0, 0, 0.55]}
+          departmentSlug={departmentSlug}
+          slotIndex={slotIndex}
+        />
+      )}
     </group>
   );
 };
-

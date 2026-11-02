@@ -1,10 +1,11 @@
 import { create } from 'zustand';
-import { Company, DepartmentWithCounts, HealthCheckResponse } from '@vac/shared';
+import { Company, DepartmentWithCounts, HealthCheckResponse, Employee } from '@vac/shared';
 import { api, EmployeeStats } from '../services/api';
 
 interface CompanyState {
   company: (Company & { departments: DepartmentWithCounts[] }) | null;
   departments: DepartmentWithCounts[];
+  employees: Employee[];
   employeeStats: EmployeeStats;
   health: HealthCheckResponse | null;
   isLoading: boolean;
@@ -13,12 +14,14 @@ interface CompanyState {
 
   fetchData: () => Promise<void>;
   fetchHealth: () => Promise<void>;
+  fetchEmployees: () => Promise<void>;
   updateCompanyProfile: (data: Partial<Company>) => Promise<void>;
 }
 
 export const useCompanyStore = create<CompanyState>((set, get) => ({
   company: null,
   departments: [],
+  employees: [],
   employeeStats: {
     totalEmployees: 0,
     totalAiAgents: 0,
@@ -35,10 +38,11 @@ export const useCompanyStore = create<CompanyState>((set, get) => ({
   fetchData: async () => {
     set({ isLoading: true, error: null });
     try {
-      const [companyData, healthData, statsData] = await Promise.allSettled([
+      const [companyData, healthData, statsData, employeesData] = await Promise.allSettled([
         api.getActiveCompany(),
         api.getHealth(),
         api.getEmployeeStats(),
+        api.getEmployees(),
       ]);
 
       set((state) => ({
@@ -46,6 +50,7 @@ export const useCompanyStore = create<CompanyState>((set, get) => ({
         departments: companyData.status === 'fulfilled' ? companyData.value.departments || [] : state.departments,
         health: healthData.status === 'fulfilled' ? healthData.value : state.health,
         employeeStats: statsData.status === 'fulfilled' ? statsData.value : state.employeeStats,
+        employees: employeesData.status === 'fulfilled' ? employeesData.value : state.employees,
         isLoading: false,
         lastFetchedAt: new Date(),
         error: companyData.status === 'rejected' ? 'Failed to connect to backend API' : null,
@@ -55,6 +60,15 @@ export const useCompanyStore = create<CompanyState>((set, get) => ({
         isLoading: false,
         error: err.message || 'Error loading platform data',
       });
+    }
+  },
+
+  fetchEmployees: async () => {
+    try {
+      const employees = await api.getEmployees();
+      set({ employees });
+    } catch (err) {
+      console.warn('Failed to load employees:', err);
     }
   },
 

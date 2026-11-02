@@ -29,3 +29,4 @@ export const SUPPORTED_ANIMATION_STATES: CharacterAnimationState[] = [
   'talking',
   'meeting',
 ];
+

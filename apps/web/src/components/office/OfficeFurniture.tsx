@@ -1,7 +1,18 @@
 import React from 'react';
 import { Workstation } from './Workstation';
+import { useCompanyStore } from '../../store/useCompanyStore';
 
-export const OfficeFurniture: React.FC = () => {
+interface OfficeFurnitureProps {
+  onSelectAgent?: (employeeId: string) => void;
+}
+
+export const OfficeFurniture: React.FC<OfficeFurnitureProps> = ({ onSelectAgent }) => {
+  const { employees } = useCompanyStore();
+
+  const getAgent = (deptSlug: string, slotIndex: number) => {
+    return employees.find((e) => e.workstationId === `${deptSlug}-${slotIndex}`) || null;
+  };
+
   return (
     <group position={[0, 0, 0]}>
       {/* ========================================================
@@ -14,6 +25,8 @@ export const OfficeFurniture: React.FC = () => {
         screenColor="#38bdf8"
         departmentSlug="technology"
         slotIndex={1}
+        assignedAgent={getAgent('technology', 1)}
+        onSelectAgent={onSelectAgent}
       />
       <Workstation
         position={[-7, 0, -9]}
@@ -21,6 +34,8 @@ export const OfficeFurniture: React.FC = () => {
         screenColor="#38bdf8"
         departmentSlug="technology"
         slotIndex={2}
+        assignedAgent={getAgent('technology', 2)}
+        onSelectAgent={onSelectAgent}
       />
       <Workstation
         position={[-9, 0, -7]}
@@ -28,6 +43,8 @@ export const OfficeFurniture: React.FC = () => {
         screenColor="#06b6d4"
         departmentSlug="technology"
         slotIndex={3}
+        assignedAgent={getAgent('technology', 3)}
+        onSelectAgent={onSelectAgent}
       />
 
       {/* High-Performance Server Racks in Tech Hub */}
@@ -66,6 +83,8 @@ export const OfficeFurniture: React.FC = () => {
         screenColor="#10b981"
         departmentSlug="engineering"
         slotIndex={1}
+        assignedAgent={getAgent('engineering', 1)}
+        onSelectAgent={onSelectAgent}
       />
       <Workstation
         position={[1, 0, -9]}
@@ -73,6 +92,8 @@ export const OfficeFurniture: React.FC = () => {
         screenColor="#10b981"
         departmentSlug="engineering"
         slotIndex={2}
+        assignedAgent={getAgent('engineering', 2)}
+        onSelectAgent={onSelectAgent}
       />
       <Workstation
         position={[-1, 0, -7]}
@@ -80,6 +101,8 @@ export const OfficeFurniture: React.FC = () => {
         screenColor="#10b981"
         departmentSlug="engineering"
         slotIndex={3}
+        assignedAgent={getAgent('engineering', 3)}
+        onSelectAgent={onSelectAgent}
       />
       <Workstation
         position={[1, 0, -7]}
@@ -87,6 +110,8 @@ export const OfficeFurniture: React.FC = () => {
         screenColor="#10b981"
         departmentSlug="engineering"
         slotIndex={4}
+        assignedAgent={getAgent('engineering', 4)}
+        onSelectAgent={onSelectAgent}
       />
 
       {/* ========================================================

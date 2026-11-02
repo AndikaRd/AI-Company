@@ -18,3 +18,4 @@ export interface GlbCharacterContract {
   rotationY?: number;
   scale?: [number, number, number];
 }
+

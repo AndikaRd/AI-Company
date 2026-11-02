@@ -1,6 +1,15 @@
-import { Controller, Get, Post, Body, Param, Query, ParseUUIDPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { EmployeesService } from './employees.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
+import { SendChatMessageDto } from '../ollama/dto/chat-message.dto';
 
 @Controller('employees')
 export class EmployeesController {
@@ -46,5 +55,39 @@ export class EmployeesController {
       timestamp: new Date().toISOString(),
     };
   }
-}
 
+  // --- CONVERSATION & CHAT ENDPOINTS (PHASE 4) ---
+
+  @Get(':id/conversations')
+  async getConversations(@Param('id', ParseUUIDPipe) id: string) {
+    const data = await this.employeesService.getConversations(id);
+    return {
+      success: true,
+      data,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Get('conversations/:conversationId/messages')
+  async getMessages(@Param('conversationId', ParseUUIDPipe) conversationId: string) {
+    const data = await this.employeesService.getMessages(conversationId);
+    return {
+      success: true,
+      data,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Post(':id/chat')
+  async chatWithEmployee(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() sendChatMessageDto: SendChatMessageDto,
+  ) {
+    const data = await this.employeesService.chatWithEmployee(id, sendChatMessageDto);
+    return {
+      success: true,
+      data,
+      timestamp: new Date().toISOString(),
+    };
+  }
+}

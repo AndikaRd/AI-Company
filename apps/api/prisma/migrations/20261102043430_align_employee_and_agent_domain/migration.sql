@@ -32,3 +32,4 @@ CREATE INDEX "employees_supervisor_id_idx" ON "employees"("supervisor_id");
 
 -- AddForeignKey
 ALTER TABLE "employees" ADD CONSTRAINT "employees_supervisor_id_fkey" FOREIGN KEY ("supervisor_id") REFERENCES "employees"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+

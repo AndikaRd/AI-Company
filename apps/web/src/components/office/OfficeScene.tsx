@@ -41,7 +41,11 @@ const CameraController: React.FC = () => {
   );
 };
 
-export const OfficeScene: React.FC = () => {
+interface OfficeSceneProps {
+  onSelectAgent?: (employeeId: string) => void;
+}
+
+export const OfficeScene: React.FC<OfficeSceneProps> = ({ onSelectAgent }) => {
   return (
     <div className="w-full h-full relative bg-[#070b14]">
       <Canvas
@@ -72,7 +76,7 @@ export const OfficeScene: React.FC = () => {
         {/* 3D Office Geometry Elements */}
         <OfficeFloor />
         <OfficeWalls />
-        <OfficeFurniture />
+        <OfficeFurniture onSelectAgent={onSelectAgent} />
 
         {/* 3D Floating Zone Tags */}
         <DepartmentZoneTags />

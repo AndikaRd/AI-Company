@@ -1,4 +1,12 @@
-import { HealthCheckResponse, Company, DepartmentWithCounts } from '@vac/shared';
+import {
+  HealthCheckResponse,
+  Company,
+  DepartmentWithCounts,
+  Employee,
+  ChatMessage,
+  SendChatMessageDto,
+  ChatExecutionResponse,
+} from '@vac/shared';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
@@ -9,6 +17,13 @@ export interface EmployeeStats {
   idleEmployees: number;
   busyEmployees: number;
   offlineEmployees: number;
+}
+
+export interface AiHealthInfo {
+  available: boolean;
+  latencyMs: number;
+  baseUrlSafe: string;
+  version?: string;
 }
 
 class ApiService {
@@ -66,6 +81,47 @@ class ApiService {
 
   async getEmployeeStats(): Promise<EmployeeStats> {
     return this.request('/employees/stats');
+  }
+
+  async getEmployees(departmentId?: string): Promise<Employee[]> {
+    return this.request(departmentId ? `/employees?departmentId=${departmentId}` : '/employees');
+  }
+
+  async getEmployee(id: string): Promise<Employee> {
+    return this.request(`/employees/${id}`);
+  }
+
+  async createEmployee(data: any): Promise<Employee> {
+    return this.request('/employees', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getConversations(employeeId: string): Promise<any[]> {
+    return this.request(`/employees/${employeeId}/conversations`);
+  }
+
+  async getMessages(conversationId: string): Promise<ChatMessage[]> {
+    return this.request(`/employees/conversations/${conversationId}/messages`);
+  }
+
+  async sendChatMessage(
+    employeeId: string,
+    dto: SendChatMessageDto,
+  ): Promise<ChatExecutionResponse> {
+    return this.request(`/employees/${employeeId}/chat`, {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    });
+  }
+
+  async getAiHealth(): Promise<AiHealthInfo> {
+    return this.request('/ai/health');
+  }
+
+  async getAiModels(): Promise<any[]> {
+    return this.request('/ai/models');
   }
 }
 
