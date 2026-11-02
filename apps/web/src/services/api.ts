@@ -6,6 +6,11 @@ import {
   ChatMessage,
   SendChatMessageDto,
   ChatExecutionResponse,
+  Task,
+  CreateTaskDto,
+  ReviewApprovalDto,
+  ApprovalRequest,
+  ToolDefinitionDto,
 } from '@vac/shared';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
@@ -122,6 +127,46 @@ class ApiService {
 
   async getAiModels(): Promise<any[]> {
     return this.request('/ai/models');
+  }
+
+  async getTasks(query?: { status?: string; employeeId?: string }): Promise<Task[]> {
+    const params = new URLSearchParams();
+    if (query?.status) params.append('status', query.status);
+    if (query?.employeeId) params.append('employeeId', query.employeeId);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    return this.request(`/tasks${queryString}`);
+  }
+
+  async getTask(id: string): Promise<Task> {
+    return this.request(`/tasks/${id}`);
+  }
+
+  async createTask(dto: CreateTaskDto): Promise<Task> {
+    return this.request('/tasks', {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    });
+  }
+
+  async retryTask(id: string): Promise<{ success: boolean; message: string }> {
+    return this.request(`/tasks/${id}/retry`, {
+      method: 'POST',
+    });
+  }
+
+  async getPendingApprovals(): Promise<ApprovalRequest[]> {
+    return this.request('/tasks/approvals/pending');
+  }
+
+  async reviewApproval(approvalId: string, dto: ReviewApprovalDto): Promise<any> {
+    return this.request(`/tasks/approvals/${approvalId}/review`, {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    });
+  }
+
+  async getRegisteredTools(): Promise<ToolDefinitionDto[]> {
+    return this.request('/tools');
   }
 }
 

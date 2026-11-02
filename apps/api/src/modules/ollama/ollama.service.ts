@@ -13,9 +13,11 @@ export interface OllamaModelInfo {
 export interface OllamaChatPayload {
   model: string;
   messages: Array<{
-    role: 'system' | 'user' | 'assistant';
+    role: 'system' | 'user' | 'assistant' | 'tool';
     content: string;
+    tool_calls?: any[];
   }>;
+  tools?: any[];
   temperature?: number;
   maxTokens?: number;
   think?: boolean;
@@ -24,6 +26,13 @@ export interface OllamaChatPayload {
 export interface OllamaChatResult {
   content: string;
   thinking?: string;
+  toolCalls?: Array<{
+    id?: string;
+    function: {
+      name: string;
+      arguments: Record<string, any>;
+    };
+  }>;
   evalCount?: number;
   promptEvalCount?: number;
   durationMs: number;
@@ -155,6 +164,10 @@ export class OllamaService {
       },
     };
 
+    if (payload.tools && payload.tools.length > 0) {
+      requestBody.tools = payload.tools;
+    }
+
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), this.requestTimeoutMs);
@@ -187,6 +200,7 @@ export class OllamaService {
       return {
         content: message.content || '',
         thinking: message.thinking || undefined,
+        toolCalls: message.tool_calls || undefined,
         evalCount: result.eval_count,
         promptEvalCount: result.prompt_eval_count,
         durationMs,
@@ -211,3 +225,4 @@ export class OllamaService {
     }
   }
 }
+

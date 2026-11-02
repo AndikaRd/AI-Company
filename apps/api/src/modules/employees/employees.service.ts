@@ -70,6 +70,32 @@ export class EmployeesService {
     return employee;
   }
 
+  async update(id: string, data: any) {
+    const employee = await this.prisma.employee.findUnique({ where: { id } });
+    if (!employee) {
+      throw new NotFoundException(`Employee with ID "${id}" not found`);
+    }
+
+    const { agentConfig, ...employeeData } = data;
+
+    if (agentConfig) {
+      await this.prisma.agentConfiguration.upsert({
+        where: { employeeId: id },
+        create: { ...agentConfig, employeeId: id },
+        update: agentConfig,
+      });
+    }
+
+    return this.prisma.employee.update({
+      where: { id },
+      data: employeeData,
+      include: {
+        department: true,
+        agentConfig: true,
+      },
+    });
+  }
+
   async create(createEmployeeDto: CreateEmployeeDto) {
     const { agentConfig, departmentId, supervisorId, ...employeeData } = createEmployeeDto;
 

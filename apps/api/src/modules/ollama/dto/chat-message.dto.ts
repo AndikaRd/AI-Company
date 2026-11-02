@@ -14,3 +14,4 @@ export class SendChatMessageDto {
   @IsOptional()
   think?: boolean = false;
 }
+

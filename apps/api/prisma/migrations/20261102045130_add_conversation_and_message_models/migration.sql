@@ -34,3 +34,4 @@ ALTER TABLE "conversations" ADD CONSTRAINT "conversations_employee_id_fkey" FORE
 
 -- AddForeignKey
 ALTER TABLE "messages" ADD CONSTRAINT "messages_conversation_id_fkey" FOREIGN KEY ("conversation_id") REFERENCES "conversations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+

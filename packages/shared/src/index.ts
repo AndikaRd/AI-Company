@@ -4,6 +4,8 @@ export * from './types/employee';
 export * from './types/agent';
 export * from './types/character';
 export * from './types/chat';
+export * from './types/tool';
+export * from './types/task';
 export * from './types/health';
 export * from './types/api';
 export * from './types/socket';

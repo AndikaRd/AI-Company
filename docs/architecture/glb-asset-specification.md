@@ -158,3 +158,4 @@ useGLTF.preload('/assets/characters/alex.glb');
    `/assets/characters/alex.glb`.
 3. Fallback Mechanism:
    If the GLB file is missing or still being downloaded, the runtime seamlessly mounts the procedural stylized 3D avatar so the user experience is never broken.
+

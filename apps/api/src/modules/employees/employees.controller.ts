@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
   Param,
   Query,
@@ -52,6 +53,20 @@ export class EmployeesController {
       success: true,
       data,
       message: 'Employee created successfully',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Patch(':id')
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: any,
+  ) {
+    const data = await this.employeesService.update(id, body);
+    return {
+      success: true,
+      data,
+      message: 'Employee updated successfully',
       timestamp: new Date().toISOString(),
     };
   }

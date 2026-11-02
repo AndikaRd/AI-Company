@@ -8,3 +8,4 @@ import { OllamaController } from './ollama.controller';
   exports: [OllamaService],
 })
 export class OllamaModule {}
+

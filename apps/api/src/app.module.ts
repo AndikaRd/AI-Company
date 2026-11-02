@@ -8,6 +8,8 @@ import { DepartmentsModule } from './modules/departments/departments.module';
 import { EmployeesModule } from './modules/employees/employees.module';
 import { EventsModule } from './modules/events/events.module';
 import { OllamaModule } from './modules/ollama/ollama.module';
+import { ToolsModule } from './modules/tools/tools.module';
+import { TasksModule } from './modules/tasks/tasks.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { OllamaModule } from './modules/ollama/ollama.module';
     EmployeesModule,
     EventsModule,
     OllamaModule,
+    ToolsModule,
+    TasksModule,
   ],
 })
 export class AppModule {}

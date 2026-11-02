@@ -1,0 +1,8 @@
+{
+  "name": "react-counter-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npx tsc --noEmit"
+  }
+}
