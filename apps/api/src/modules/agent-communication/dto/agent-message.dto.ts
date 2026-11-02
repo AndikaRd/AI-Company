@@ -69,6 +69,10 @@ export class DelegateTaskDto {
 
   @IsOptional()
   contextData?: Record<string, any>;
+
+  @IsOptional()
+  @IsBoolean()
+  autoAccept?: boolean;
 }
 
 export class RespondToDelegationDto {
@@ -86,4 +90,9 @@ export class RespondToDelegationDto {
   @IsOptional()
   @IsString()
   reason?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  skipExecutionDispatch?: boolean;
 }
+

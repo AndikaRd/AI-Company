@@ -74,8 +74,28 @@ export class TaskRunnerService {
     // 1. Resolve workspace root
     let workspaceRoot = task.workspacePath;
     if (!workspaceRoot || !existsSync(workspaceRoot)) {
-      workspaceRoot = path.resolve(process.cwd(), 'infrastructure', 'workspaces', `task-${taskId}`);
-      await fs.mkdir(workspaceRoot, { recursive: true });
+      if (task.parentTaskId) {
+        // Inherit parent project workspace to allow cross-subtask context sharing and verification
+        const parent = await this.prisma.task.findUnique({
+          where: { id: task.parentTaskId },
+        });
+        if (parent?.workspacePath && existsSync(parent.workspacePath)) {
+          workspaceRoot = parent.workspacePath;
+        } else {
+          workspaceRoot = path.resolve(process.cwd(), 'infrastructure', 'workspaces', `task-${task.parentTaskId}`);
+          await fs.mkdir(workspaceRoot, { recursive: true });
+          if (parent) {
+            await this.prisma.task.update({
+              where: { id: parent.id },
+              data: { workspacePath: workspaceRoot },
+            });
+          }
+        }
+      } else {
+        workspaceRoot = path.resolve(process.cwd(), 'infrastructure', 'workspaces', `task-${taskId}`);
+        await fs.mkdir(workspaceRoot, { recursive: true });
+      }
+
       await this.prisma.task.update({
         where: { id: taskId },
         data: { workspacePath: workspaceRoot },
@@ -128,21 +148,22 @@ export class TaskRunnerService {
       permissionConfig: (agentConfig.permissionConfig as any) || undefined,
     };
 
-    // 4. Construct Prompt & Message History
-    const systemPrompt =
+    // 4. Construct Prompt & Message History using employee's unique AgentConfiguration persona
+    const employeePersona = agentConfig.systemPrompt ||
       `You are ${employee.firstName} ${employee.lastName}, ${employee.role} at Virtual AI Company (VAC).\n` +
       `Personality & Principles: ${employee.personality || 'Analytical, pragmatic, and thorough.'}\n` +
-      `Primary Technical Domain: ${employee.primaryExpertise || 'Full-Stack Software Engineering'}\n\n` +
-      `You are operating directly within an isolated workspace sandbox to complete the assigned engineering task.\n` +
+      `Primary Technical Domain: ${employee.primaryExpertise || 'Full-Stack Software Engineering'}`;
+
+    const systemPrompt =
+      `${employeePersona}\n\n` +
+      `You are operating directly within an isolated workspace sandbox to complete the assigned task.\n` +
       `WORKSPACE INSTRUCTIONS:\n` +
-      `- Available tools: list_files, read_file, search_code, create_file, edit_file, write_file, run_build, run_tests, git_status, git_commit.\n` +
-      `- Work sequentially:\n` +
+      `- Available tools: ${(toolsEnabled || []).join(', ')}.\n` +
+      `- Work sequentially to accomplish your assigned responsibilities:\n` +
       `  1. Inspect the workspace files with list_files or read_file.\n` +
-      `  2. Run the build with run_build to see any compile errors.\n` +
-      `  3. If run_build shows an error (e.g. in src/App.tsx), immediately read that file with read_file.\n` +
-      `  4. Fix the bug using edit_file (pass path, target string to replace, and corrected replacement).\n` +
-      `  5. Run run_build again to confirm the build succeeds with exit code 0.\n` +
-      `  6. When the build succeeds, stop calling tools and output your final engineering report detailing the root cause, changes made, and build result.\n` +
+      `  2. Execute your specific deliverables (specifying architecture, implementing code, or writing tests).\n` +
+      `  3. Use run_build or run_tests to verify your work when appropriate.\n` +
+      `  4. When your work is complete, provide a comprehensive final deliverable summary.\n` +
       `- Do not attempt to traverse outside the workspace (e.g. "../" is forbidden by sandbox security).`;
 
     const messages: Array<{
@@ -302,6 +323,31 @@ export class TaskRunnerService {
             },
           },
         });
+
+        // If this is a subtask with a delegator, emit TASK_COMPLETED message to delegator
+        if (task.delegatedByEmployeeId) {
+          try {
+            await this.prisma.agentMessage.create({
+              data: {
+                senderEmployeeId: employee.id,
+                recipientEmployeeId: task.delegatedByEmployeeId,
+                taskId: task.id,
+                correlationId: task.parentTaskId || task.id,
+                messageType: 'TASK_COMPLETED',
+                content: `Completed subtask "${task.title}". Deliverable: ${finalSummary.slice(0, 500)}`,
+                payload: {
+                  subtaskId: task.id,
+                  subtaskTitle: task.title,
+                  summary: finalSummary,
+                  completedAt: new Date().toISOString(),
+                },
+              },
+            });
+            this.logger.log(`[Task ${taskId}] Emitted TASK_COMPLETED message from ${employee.firstName} to supervisor.`);
+          } catch (msgErr: any) {
+            this.logger.warn(`Failed to emit TASK_COMPLETED message: ${msgErr.message}`);
+          }
+        }
 
         // If this is a subtask, notify orchestrator to verify parent task completion
         if (task.parentTaskId) {

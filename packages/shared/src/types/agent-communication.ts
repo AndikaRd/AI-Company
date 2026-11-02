@@ -46,6 +46,7 @@ export interface DelegateTaskDto {
   priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   requiredSkills?: string[];
   contextData?: Record<string, any>;
+  autoAccept?: boolean;
 }
 
 export interface RespondToDelegationDto {
@@ -53,4 +54,6 @@ export interface RespondToDelegationDto {
   recipientEmployeeId: string;
   accept: boolean;
   reason?: string;
+  skipExecutionDispatch?: boolean;
 }
+

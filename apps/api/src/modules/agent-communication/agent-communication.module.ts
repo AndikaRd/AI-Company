@@ -11,3 +11,4 @@ import { TasksModule } from '../tasks/tasks.module';
   exports: [AgentCommunicationService],
 })
 export class AgentCommunicationModule {}
+

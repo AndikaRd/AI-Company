@@ -59,3 +59,4 @@ ALTER TABLE "agent_messages" ADD CONSTRAINT "agent_messages_recipient_employee_i
 
 -- AddForeignKey
 ALTER TABLE "agent_messages" ADD CONSTRAINT "agent_messages_task_id_fkey" FOREIGN KEY ("task_id") REFERENCES "tasks"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+

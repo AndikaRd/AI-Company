@@ -280,3 +280,4 @@ export const INITIAL_COMPANY_ROLES: RoleSpecification[] = [
     },
   },
 ];
+

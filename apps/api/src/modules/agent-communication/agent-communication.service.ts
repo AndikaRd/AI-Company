@@ -185,6 +185,28 @@ export class AgentCommunicationService {
       `Task [${dto.subtaskTitle}] (${result.subtask.id}) delegated from ${delegator.firstName} to ${assignee.firstName} (Depth: ${newDepth})`,
     );
 
+    // Auto-accept if requested
+    if (dto.autoAccept) {
+      await this.prisma.$transaction(async (tx) => {
+        await tx.task.update({
+          where: { id: result.subtask.id },
+          data: { status: 'IN_PROGRESS' },
+        });
+        await tx.agentMessage.create({
+          data: {
+            senderEmployeeId: dto.assignedEmployeeId,
+            recipientEmployeeId: dto.delegatingEmployeeId,
+            taskId: result.subtask.id,
+            correlationId,
+            messageType: 'TASK_ACCEPTED',
+            content: `Accepted task "${dto.subtaskTitle}". Commencing execution within scoped sandbox.`,
+          },
+        });
+      });
+      await this.taskRunner.runTaskAsync(result.subtask.id);
+      this.logger.log(`Task [${result.subtask.id}] auto-accepted by ${assignee.firstName} and execution dispatched.`);
+    }
+
     return result;
   }
 
@@ -239,8 +261,10 @@ export class AgentCommunicationService {
         });
       }
 
-      // 3. Dispatch execution
-      await this.taskRunner.runTaskAsync(subtask.id);
+      // 3. Dispatch execution unless caller explicitly skipped dispatch (e.g. for custom step runner)
+      if (!dto.skipExecutionDispatch) {
+        await this.taskRunner.runTaskAsync(subtask.id);
+      }
 
       return {
         accepted: true,
@@ -385,3 +409,4 @@ export class AgentCommunicationService {
     });
   }
 }
+

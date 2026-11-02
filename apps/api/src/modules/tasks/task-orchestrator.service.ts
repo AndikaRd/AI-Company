@@ -73,15 +73,18 @@ export class TaskOrchestratorService {
     let rationale = '';
 
     try {
-      const prompt =
+      const systemPrompt = coordinator.agentConfig?.systemPrompt ||
         `You are ${coordinator.firstName} ${coordinator.lastName}, ${coordinator.jobTitle || coordinator.role} at Virtual AI Company (VAC).\n` +
-        `Your task is to decompose the following company directive into 2 to 3 sequential, concrete subtasks for your team:\n\n` +
+        `Your mandate is cross-functional task orchestration, operational governance, and workflow decomposition.`;
+
+      const userPrompt =
+        `You are decomposing an executive directive from the CEO into 2 to 3 sequential, concrete subtasks for your team:\n\n` +
         `DIRECTIVE TITLE: ${parentTask.title}\n` +
         `DIRECTIVE OBJECTIVE: ${parentTask.description}\n` +
         (dto.guidelines ? `COORDINATION GUIDELINES: ${dto.guidelines}\n` : '') +
         `\nAVAILABLE TEAM MEMBERS:\n` +
         employees
-          .map((e) => `- ${e.firstName} ${e.lastName} [${e.employeeCode}] (${e.jobTitle || e.role}, Dept: ${e.department.name})`)
+          .map((e) => `- ${e.firstName} ${e.lastName} [${e.employeeCode}] (${e.jobTitle || e.role}, Dept: ${e.department.name}, Skills: ${((e.skills as any) || []).join(', ')})`)
           .join('\n') +
         `\n\nOUTPUT INSTRUCTIONS:\n` +
         `Respond ONLY with a valid JSON array of subtask objects. Example format:\n` +
@@ -89,7 +92,7 @@ export class TaskOrchestratorService {
         `  {\n` +
         `    "title": "Subtask title",\n` +
         `    "description": "Specific deliverable objective",\n` +
-        `    "requiredRole": "Engineering" or "QA" or "Research" or "Technology",\n` +
+        `    "requiredRole": "Technology" or "Engineering" or "Quality Assurance" or "Research",\n` +
         `    "priority": "HIGH" or "MEDIUM"\n` +
         `  }\n` +
         `]\n` +
@@ -97,15 +100,19 @@ export class TaskOrchestratorService {
 
       const response = await this.ollamaService.chat({
         model: coordinator.agentConfig?.modelName || 'qwen3.5:4b',
-        messages: [{ role: 'system', content: prompt }],
-        temperature: 0.3,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.2,
         think: false,
       });
 
-      const jsonMatch = response.content.match(/\[[\s\S]*\]/);
+      const rawContent = response.content || '';
+      const jsonMatch = rawContent.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         subtaskDefs = JSON.parse(jsonMatch[0]);
-        rationale = `Plan synthesized by ${coordinator.firstName} ${coordinator.lastName} via Ollama AI orchestration.`;
+        rationale = `Plan synthesized by ${coordinator.firstName} ${coordinator.lastName} (COO) via Ollama inference (${response.durationMs}ms).`;
       }
     } catch (err: any) {
       this.logger.warn(`AI decomposition returned unstructured output (${err.message}). Using deterministic fallback.`);
@@ -290,19 +297,66 @@ export class TaskOrchestratorService {
         deliverables: st.deliverables,
       }));
 
-      const summary =
-        `### Consolidated Multi-Agent Executive Report\n\n` +
-        `**Directive:** ${parentTask.title}\n` +
-        `**Status:** 100% Subtasks Verified & Completed\n\n` +
-        `#### Subtask Execution Deliverables:\n` +
-        subtaskDeliverables
-          .map(
-            (sd, idx) =>
-              `${idx + 1}. **${sd.title}** (${sd.assignee})\n` +
-              `   - Deliverable summary: ${JSON.stringify(sd.deliverables || 'Execution completed with exit code 0.')}`,
-          )
-          .join('\n\n') +
-        `\n\n*Prepared by VAC Autonomous Orchestration Engine for CEO Review.*`;
+      // Find Elena (COO) to perform executive evaluation and synthesis
+      const coo = await this.prisma.employee.findFirst({
+        where: { employeeCode: 'VAC-OPS-001' },
+        include: { agentConfig: true },
+      });
+
+      let summary = '';
+
+      if (coo && coo.agentConfig) {
+        try {
+          const evalPrompt =
+            `You are Elena Rostova, Chief Operating Officer (COO) and Chief of Staff at Virtual AI Company (VAC).\n` +
+            `Synthesize the following completed team deliverables for the CEO into an Executive Briefing:\n\n` +
+            `DIRECTIVE: ${parentTask.title}\n` +
+            `OBJECTIVE: ${parentTask.description}\n\n` +
+            `SUBTASK DELIVERABLES:\n` +
+            subtaskDeliverables
+              .map((sd, i) => `${i + 1}. [${sd.title}] by ${sd.assignee}:\n${JSON.stringify(sd.deliverables || 'Completed')}`)
+              .join('\n\n') +
+            `\n\nProvide a concise 3-part synthesis:\n` +
+            `1. Executive Assessment & Objective Verification\n` +
+            `2. Summary of Verified Technical Deliverables\n` +
+            `3. Operational Readiness for CEO Sign-Off.`;
+
+          const aiEval = await this.ollamaService.chat({
+            model: coo.agentConfig.modelName || 'qwen3.5:4b',
+            messages: [
+              { role: 'system', content: coo.agentConfig.systemPrompt },
+              { role: 'user', content: evalPrompt },
+            ],
+            temperature: 0.2,
+            think: false,
+          });
+
+          if (aiEval.content && aiEval.content.trim().length > 50) {
+            summary =
+              `### Consolidated Executive Briefing (Ollama AI Synthesis)\n` +
+              `*Synthesized by Elena Rostova (COO) via Ollama ${coo.agentConfig.modelName}*\n\n` +
+              aiEval.content;
+          }
+        } catch (evalErr: any) {
+          this.logger.warn(`AI executive synthesis failed (${evalErr.message}). Using structured fallback.`);
+        }
+      }
+
+      if (!summary) {
+        summary =
+          `### Consolidated Multi-Agent Executive Report\n\n` +
+          `**Directive:** ${parentTask.title}\n` +
+          `**Status:** 100% Subtasks Verified & Completed\n\n` +
+          `#### Subtask Execution Deliverables:\n` +
+          subtaskDeliverables
+            .map(
+              (sd, idx) =>
+                `${idx + 1}. **${sd.title}** (${sd.assignee})\n` +
+                `   - Deliverable summary: ${JSON.stringify(sd.deliverables || 'Execution completed with exit code 0.')}`,
+            )
+            .join('\n\n') +
+          `\n\n*Prepared by Elena Rostova (COO) via VAC Autonomous Orchestration Engine.*`;
+      }
 
       await this.prisma.task.update({
         where: { id: parentTaskId },
