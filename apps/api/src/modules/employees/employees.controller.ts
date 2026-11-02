@@ -36,9 +36,60 @@ export class EmployeesController {
     };
   }
 
+  // --- ORGANIZATIONAL HIERARCHY ENDPOINTS ---
+
+  @Get('hierarchy')
+  async getHierarchy() {
+    const data = await this.employeesService.getHierarchy();
+    return {
+      success: true,
+      data,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Get('eligible')
+  async getEligible(
+    @Query('skills') skills?: string,
+    @Query('role') role?: string,
+    @Query('department') department?: string,
+  ) {
+    const skillsList = skills ? skills.split(',').map((s) => s.trim()) : undefined;
+    const data = await this.employeesService.getEligibleEmployees({
+      skills: skillsList,
+      role,
+      departmentSlug: department,
+    });
+    return {
+      success: true,
+      data,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   @Get(':id')
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     const data = await this.employeesService.findOne(id);
+    return {
+      success: true,
+      data,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Get(':id/subordinates')
+  async getSubordinates(@Param('id', ParseUUIDPipe) id: string) {
+    const data = await this.employeesService.getSubordinates(id);
+    return {
+      success: true,
+      data,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Get(':id/supervisor-chain')
+  async getSupervisorChain(@Param('id', ParseUUIDPipe) id: string) {
+    const data = await this.employeesService.getSupervisorChain(id);
     return {
       success: true,
       data,
@@ -71,7 +122,7 @@ export class EmployeesController {
     };
   }
 
-  // --- CONVERSATION & CHAT ENDPOINTS (PHASE 4) ---
+  // --- CONVERSATION & CHAT ENDPOINTS ---
 
   @Get(':id/conversations')
   async getConversations(@Param('id', ParseUUIDPipe) id: string) {

@@ -147,3 +147,4 @@ Audit records stored in PostgreSQL (`tool_execution_logs`) pass through `LogSani
 2. **Deployment Adapter**:
    - *Current Implementation*: `SafeEnvironmentSimulationAdapter` verifies staging and production releases within an isolated sandbox test harness.
    - *Limitation*: Live cloud infrastructure deployment (AWS ECS, Kubernetes, Cloud Run) is currently disabled to prevent accidental cloud modifications until multi-tenant cluster management is established in Sprint 4.
+

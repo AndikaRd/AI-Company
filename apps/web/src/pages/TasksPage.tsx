@@ -5,6 +5,7 @@ import { Task, ApprovalRequest } from '@vac/shared';
 import { api } from '../services/api';
 import { useCompanyStore } from '../store/useCompanyStore';
 import { TaskExecutionDrawer } from '../components/tasks/TaskExecutionDrawer';
+import { TaskTreeDrawer } from '../components/tasks/TaskTreeDrawer';
 import { DispatchTaskModal } from '../components/tasks/DispatchTaskModal';
 import {
   Plus,
@@ -13,6 +14,7 @@ import {
   Terminal,
   ShieldAlert,
   Bot,
+  GitBranch,
 } from 'lucide-react';
 
 export const TasksPage: React.FC = () => {
@@ -21,6 +23,7 @@ export const TasksPage: React.FC = () => {
   const [pendingApprovals, setPendingApprovals] = useState<ApprovalRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [selectedTreeTaskId, setSelectedTreeTaskId] = useState<string | null>(null);
   const [isDispatchModalOpen, setIsDispatchModalOpen] = useState(false);
 
   const loadTasksAndApprovals = async () => {
@@ -218,12 +221,24 @@ export const TasksPage: React.FC = () => {
                             </span>
                           </div>
 
-                          {toolLogs.length > 0 && (
-                            <span className="flex items-center gap-1 font-mono text-[10px] text-slate-500">
-                              <Terminal className="w-3 h-3 text-cyan-400" />
-                              {toolLogs.length} calls
-                            </span>
-                          )}
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedTreeTaskId(task.id);
+                              }}
+                              className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-cyan-300 transition-colors"
+                              title="View Multi-Agent Task Tree"
+                            >
+                              <GitBranch className="w-3.5 h-3.5" />
+                            </button>
+                            {toolLogs.length > 0 && (
+                              <span className="flex items-center gap-1 font-mono text-[10px] text-slate-500">
+                                <Terminal className="w-3 h-3 text-cyan-400" />
+                                {toolLogs.length}
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         {/* Latest Tool Activity Pill */}
@@ -260,6 +275,14 @@ export const TasksPage: React.FC = () => {
         isOpen={Boolean(selectedTaskId)}
         onClose={() => setSelectedTaskId(null)}
         onTaskUpdated={loadTasksAndApprovals}
+      />
+
+      {/* Multi-Agent Task Tree Drawer */}
+      <TaskTreeDrawer
+        taskId={selectedTreeTaskId}
+        isOpen={Boolean(selectedTreeTaskId)}
+        onClose={() => setSelectedTreeTaskId(null)}
+        onRefresh={loadTasksAndApprovals}
       />
 
       {/* Dispatch New Task Modal */}

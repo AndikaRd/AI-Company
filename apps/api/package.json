@@ -17,7 +17,8 @@
     "prisma:studio": "prisma studio",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "test": "jest",
-    "test:security": "ts-node -r tsconfig-paths/register test/regression-security-audit.ts"
+    "test:security": "ts-node -r tsconfig-paths/register test/regression-security-audit.ts",
+    "test:multiagent": "ts-node -r tsconfig-paths/register test/multi-agent-audit.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",

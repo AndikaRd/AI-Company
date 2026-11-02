@@ -10,6 +10,7 @@ import { EventsModule } from './modules/events/events.module';
 import { OllamaModule } from './modules/ollama/ollama.module';
 import { ToolsModule } from './modules/tools/tools.module';
 import { TasksModule } from './modules/tasks/tasks.module';
+import { AgentCommunicationModule } from './modules/agent-communication/agent-communication.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { TasksModule } from './modules/tasks/tasks.module';
     OllamaModule,
     ToolsModule,
     TasksModule,
+    AgentCommunicationModule,
   ],
 })
 export class AppModule {}

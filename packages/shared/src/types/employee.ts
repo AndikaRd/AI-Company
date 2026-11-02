@@ -23,6 +23,7 @@ export interface Employee {
   personality?: string | null;
   primaryExpertise?: string | null;
   skills?: string[] | Record<string, any> | null;
+  responsibilities?: string[] | null;
   email: string;
   avatarUrl?: string | null;
   workstationId?: string | null;
@@ -36,4 +37,13 @@ export interface Employee {
   supervisor?: Employee | null;
   subordinates?: Employee[];
   agentConfig?: AgentConfiguration | null;
+}
+
+export interface OrganizationHierarchyNode {
+  employee: Employee;
+  supervisorId: string | null;
+  directReports: OrganizationHierarchyNode[];
+  department?: Department;
+  totalSubordinates: number;
+  depth: number;
 }

@@ -53,7 +53,10 @@ async function runSecurityAuditSuite(): Promise<void> {
   const mockOllamaService: any = {
     chat: async () => ({ content: 'Mock response', toolCalls: [] }),
   };
-  const taskRunner = new TaskRunnerService(prisma as any, toolRegistry, mockOllamaService);
+  const mockOrchestrator: any = {
+    checkParentTaskCompletion: async () => true,
+  };
+  const taskRunner = new TaskRunnerService(prisma as any, toolRegistry, mockOllamaService, mockOrchestrator);
   const tasksService = new TasksService(prisma as any, taskRunner);
 
   // --------------------------------------------------------------------------

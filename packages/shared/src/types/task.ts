@@ -72,6 +72,14 @@ export interface Task {
   priority: TaskPriority;
   assignedEmployeeId: string;
   assignedEmployee?: Employee;
+  delegatedByEmployeeId?: string | null;
+  delegatedBy?: Employee | null;
+  parentTaskId?: string | null;
+  parentTask?: Task | null;
+  subtasks?: Task[];
+  delegationDepth?: number;
+  requiredSkills?: string[] | null;
+  dependsOnTaskIds?: string[] | null;
   workspacePath?: string | null;
   deliverables?: Record<string, any> | null;
   executions?: TaskExecution[];
@@ -85,7 +93,33 @@ export interface CreateTaskDto {
   description: string;
   priority?: TaskPriority;
   assignedEmployeeId: string;
+  parentTaskId?: string;
   workspacePath?: string;
+  requiredSkills?: string[];
+  dependsOnTaskIds?: string[];
+}
+
+export interface SubtaskDefinitionDto {
+  title: string;
+  description: string;
+  assignedEmployeeId?: string;
+  requiredRole?: string;
+  requiredExpertise?: string;
+  priority?: TaskPriority;
+  dependsOnSubtaskIndices?: number[];
+}
+
+export interface DecomposeTaskDto {
+  taskId: string;
+  coordinatorEmployeeId: string;
+  guidelines?: string;
+}
+
+export interface TaskDecompositionPlanDto {
+  parentTaskId: string;
+  coordinatorId: string;
+  subtasks: SubtaskDefinitionDto[];
+  rationale: string;
 }
 
 export interface ReviewApprovalDto {

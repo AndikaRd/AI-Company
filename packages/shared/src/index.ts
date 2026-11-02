@@ -6,6 +6,7 @@ export * from './types/character';
 export * from './types/chat';
 export * from './types/tool';
 export * from './types/task';
+export * from './types/agent-communication';
 export * from './types/health';
 export * from './types/api';
 export * from './types/socket';

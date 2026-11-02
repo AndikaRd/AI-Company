@@ -90,6 +90,17 @@ enum ApprovalStatus {
   REJECTED
 }
 
+enum AgentMessageType {
+  DIRECT_MESSAGE
+  TASK_DELEGATION
+  TASK_ACCEPTED
+  TASK_REJECTED
+  TASK_UPDATE
+  TASK_COMPLETED
+  QUERY
+  RESPONSE
+}
+
 model Company {
   id          String         @id @default(uuid())
   name        String
@@ -134,6 +145,7 @@ model Employee {
   personality      String?             @db.Text
   primaryExpertise String?             @map("primary_expertise")
   skills           Json?
+  responsibilities Json?
   email            String              @unique
   avatarUrl        String?             @map("avatar_url")
   workstationId    String?             @map("workstation_id")
@@ -146,7 +158,10 @@ model Employee {
   subordinates     Employee[]          @relation("EmployeeSupervisor")
   agentConfig      AgentConfiguration?
   conversations    Conversation[]
-  tasks            Task[]
+  tasks            Task[]              @relation("AssignedTasks")
+  delegatedTasks   Task[]              @relation("DelegatedTasks")
+  sentMessages     AgentMessage[]      @relation("SentAgentMessages")
+  receivedMessages AgentMessage[]      @relation("ReceivedAgentMessages")
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
 
@@ -205,21 +220,32 @@ model Message {
 }
 
 model Task {
-  id                 String            @id @default(uuid())
-  title              String
-  description        String            @db.Text
-  status             TaskStatus        @default(PENDING)
-  priority           TaskPriority      @default(MEDIUM)
-  assignedEmployeeId String            @map("assigned_employee_id")
-  assignedEmployee   Employee          @relation(fields: [assignedEmployeeId], references: [id], onDelete: Cascade)
-  workspacePath      String?           @map("workspace_path")
-  deliverables       Json?
-  executions         TaskExecution[]
-  approvalRequests   ApprovalRequest[]
-  createdAt          DateTime          @default(now()) @map("created_at")
-  updatedAt          DateTime          @updatedAt @map("updated_at")
+  id                    String            @id @default(uuid())
+  title                 String
+  description           String            @db.Text
+  status                TaskStatus        @default(PENDING)
+  priority              TaskPriority      @default(MEDIUM)
+  assignedEmployeeId    String            @map("assigned_employee_id")
+  assignedEmployee      Employee          @relation("AssignedTasks", fields: [assignedEmployeeId], references: [id], onDelete: Cascade)
+  delegatedByEmployeeId String?           @map("delegated_by_employee_id")
+  delegatedBy           Employee?         @relation("DelegatedTasks", fields: [delegatedByEmployeeId], references: [id], onDelete: SetNull)
+  parentTaskId          String?           @map("parent_task_id")
+  parentTask            Task?             @relation("TaskSubtasks", fields: [parentTaskId], references: [id], onDelete: Cascade)
+  subtasks              Task[]            @relation("TaskSubtasks")
+  delegationDepth       Int               @default(0) @map("delegation_depth")
+  requiredSkills        Json?             @map("required_skills")
+  dependsOnTaskIds      Json?             @map("depends_on_task_ids")
+  workspacePath         String?           @map("workspace_path")
+  deliverables          Json?
+  executions            TaskExecution[]
+  approvalRequests      ApprovalRequest[]
+  agentMessages         AgentMessage[]
+  createdAt             DateTime          @default(now()) @map("created_at")
+  updatedAt             DateTime          @updatedAt @map("updated_at")
 
   @@index([assignedEmployeeId])
+  @@index([delegatedByEmployeeId])
+  @@index([parentTaskId])
   @@index([status])
   @@map("tasks")
 }
@@ -281,4 +307,26 @@ model ApprovalRequest {
   @@index([taskExecutionId])
   @@index([status])
   @@map("approval_requests")
+}
+
+model AgentMessage {
+  id                  String           @id @default(uuid())
+  senderEmployeeId    String           @map("sender_employee_id")
+  senderEmployee      Employee         @relation("SentAgentMessages", fields: [senderEmployeeId], references: [id], onDelete: Cascade)
+  recipientEmployeeId String           @map("recipient_employee_id")
+  recipientEmployee   Employee         @relation("ReceivedAgentMessages", fields: [recipientEmployeeId], references: [id], onDelete: Cascade)
+  taskId              String?          @map("task_id")
+  task                Task?            @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  correlationId       String           @map("correlation_id")
+  messageType         AgentMessageType @default(DIRECT_MESSAGE) @map("message_type")
+  content             String           @db.Text
+  payload             Json?
+  readAt              DateTime?        @map("read_at")
+  createdAt           DateTime         @default(now()) @map("created_at")
+
+  @@index([senderEmployeeId])
+  @@index([recipientEmployeeId])
+  @@index([taskId])
+  @@index([correlationId])
+  @@map("agent_messages")
 }

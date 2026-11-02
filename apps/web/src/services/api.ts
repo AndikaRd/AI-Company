@@ -11,6 +11,10 @@ import {
   ReviewApprovalDto,
   ApprovalRequest,
   ToolDefinitionDto,
+  OrganizationHierarchyNode,
+  AgentMessage,
+  DelegateTaskDto,
+  RespondToDelegationDto,
 } from '@vac/shared';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
@@ -167,6 +171,59 @@ class ApiService {
 
   async getRegisteredTools(): Promise<ToolDefinitionDto[]> {
     return this.request('/tools');
+  }
+
+  // --- SPRINT 4: MULTI-AGENT COLLABORATION & HIERARCHY ---
+
+  async getOrganizationHierarchy(): Promise<OrganizationHierarchyNode[]> {
+    return this.request('/employees/hierarchy');
+  }
+
+  async getSubordinates(employeeId: string): Promise<Employee[]> {
+    return this.request(`/employees/${employeeId}/subordinates`);
+  }
+
+  async getTaskTree(taskId: string): Promise<any> {
+    return this.request(`/tasks/${taskId}/tree`);
+  }
+
+  async decomposeTask(
+    taskId: string,
+    coordinatorEmployeeId: string,
+    guidelines?: string,
+  ): Promise<any> {
+    return this.request(`/tasks/${taskId}/decompose`, {
+      method: 'POST',
+      body: JSON.stringify({ coordinatorEmployeeId, guidelines }),
+    });
+  }
+
+  async consolidateTask(taskId: string): Promise<any> {
+    return this.request(`/tasks/${taskId}/consolidate`, {
+      method: 'POST',
+    });
+  }
+
+  async getRecentAgentMessages(limit = 50): Promise<AgentMessage[]> {
+    return this.request(`/agent-communication/recent?limit=${limit}`);
+  }
+
+  async getTaskMessages(taskId: string): Promise<AgentMessage[]> {
+    return this.request(`/agent-communication/tasks/${taskId}`);
+  }
+
+  async delegateTask(dto: DelegateTaskDto): Promise<any> {
+    return this.request('/agent-communication/delegate', {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    });
+  }
+
+  async respondToDelegation(dto: RespondToDelegationDto): Promise<any> {
+    return this.request('/agent-communication/respond', {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    });
   }
 }
 

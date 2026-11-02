@@ -8,15 +8,17 @@ import {
   Settings,
   Bot,
   Activity,
+  Network,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useCompanyStore } from '../../store/useCompanyStore';
 
 const NAV_ITEMS = [
   { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-  { name: 'Virtual Office 3D', path: '/office', icon: Box, highlight: true },
-  { name: 'AI Employees', path: '/employees', icon: Users, badge: 'Sprint 2' },
-  { name: 'Task Engine', path: '/tasks', icon: CheckSquare, badge: 'Sprint 2' },
+  { name: 'Virtual Office 3D', path: '/office', icon: Box },
+  { name: 'AI Employees', path: '/employees', icon: Users },
+  { name: 'Org & Delegation', path: '/hierarchy', icon: Network, badge: 'Sprint 4', highlight: true },
+  { name: 'Task Engine', path: '/tasks', icon: CheckSquare, badge: 'Sprint 4' },
   { name: 'Settings', path: '/settings', icon: Settings },
 ];
 

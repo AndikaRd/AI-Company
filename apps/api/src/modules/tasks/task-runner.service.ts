@@ -4,12 +4,15 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ToolRegistryService } from '../tools/tool-registry.service';
 import { OllamaService } from '../ollama/ollama.service';
 import { WorkspaceSandbox } from '../tools/security/workspace-sandbox';
 import { ExecutionContext } from '../tools/interfaces/tool.interface';
+import { TaskOrchestratorService } from './task-orchestrator.service';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import { existsSync } from 'fs';
@@ -23,6 +26,8 @@ export class TaskRunnerService {
     private readonly prisma: PrismaService,
     private readonly toolRegistry: ToolRegistryService,
     private readonly ollamaService: OllamaService,
+    @Inject(forwardRef(() => TaskOrchestratorService))
+    private readonly taskOrchestrator: TaskOrchestratorService,
   ) {}
 
   /**
@@ -297,6 +302,15 @@ export class TaskRunnerService {
             },
           },
         });
+
+        // If this is a subtask, notify orchestrator to verify parent task completion
+        if (task.parentTaskId) {
+          try {
+            await this.taskOrchestrator.checkParentTaskCompletion(task.parentTaskId);
+          } catch (orchErr: any) {
+            this.logger.warn(`Failed to check parent task completion: ${orchErr.message}`);
+          }
+        }
       } else {
         this.logger.warn(`[Task ${taskId}] Reached iteration limit (${maxIterations}) without final answer.`);
         await this.prisma.taskExecution.update({
