@@ -78,3 +78,4 @@ export const INITIAL_DEPARTMENTS: InitialDepartmentDefinition[] = [
     zoneBounds: { x: 8, z: 8, width: 8, depth: 8 },
   },
 ];
+

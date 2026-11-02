@@ -9,3 +9,4 @@ export interface HealthCheckResponse {
   };
   version: string;
 }
+

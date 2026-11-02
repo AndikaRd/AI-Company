@@ -15,3 +15,4 @@ export default (): { app: AppConfig } => ({
     databaseUrl: process.env.DATABASE_URL || '',
   },
 });
+

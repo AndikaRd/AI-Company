@@ -12,3 +12,4 @@ export interface AgentConfiguration {
   createdAt: string | Date;
   updatedAt: string | Date;
 }
+

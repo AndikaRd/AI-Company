@@ -8,3 +8,4 @@ import { DepartmentsService } from './departments.service';
   exports: [DepartmentsService],
 })
 export class DepartmentsModule {}
+

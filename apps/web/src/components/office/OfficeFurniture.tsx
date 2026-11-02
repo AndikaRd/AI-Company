@@ -316,3 +316,4 @@ export const OfficeFurniture: React.FC = () => {
     </group>
   );
 };
+

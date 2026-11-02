@@ -10,3 +10,4 @@ export const VirtualOfficePage: React.FC = () => {
     </div>
   );
 };
+

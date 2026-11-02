@@ -14,3 +14,4 @@ export class HealthController {
     res.status(httpStatus).json(health);
   }
 }
+

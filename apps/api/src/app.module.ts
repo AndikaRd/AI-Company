@@ -24,3 +24,4 @@ import { EventsModule } from './modules/events/events.module';
   ],
 })
 export class AppModule {}
+

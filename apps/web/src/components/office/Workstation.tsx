@@ -112,3 +112,4 @@ export const Workstation: React.FC<WorkstationProps> = ({
     </group>
   );
 };
+

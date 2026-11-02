@@ -100,3 +100,4 @@ export class CreateEmployeeDto {
   @Type(() => AgentConfigurationDto)
   agentConfig?: AgentConfigurationDto;
 }
+

@@ -13,3 +13,4 @@ export interface PaginatedResponse<T = any> extends ApiResponse<T[]> {
     totalPages: number;
   };
 }
+

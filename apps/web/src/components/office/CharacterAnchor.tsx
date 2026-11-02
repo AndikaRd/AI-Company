@@ -60,3 +60,4 @@ export const CharacterAnchor: React.FC<CharacterAnchorProps> = ({
     </group>
   );
 };
+

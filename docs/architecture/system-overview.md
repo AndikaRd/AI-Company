@@ -75,3 +75,4 @@ virtual-ai-company/
 4. **Telemetry & Real-Time Ready**:
    - Centralized health checks monitoring API and database ping latency.
    - Socket.IO gateway initialized for real-time agent lifecycle and spatial state broadcasts.
+

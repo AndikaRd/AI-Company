@@ -88,3 +88,4 @@ The `EventsGateway` is mounted on the server instance:
   - `agent:status_changed`: Broadcasts agent transition between `ACTIVE`, `IDLE`, `BUSY`, and `OFFLINE`.
   - `office:zone_entered` / `office:zone_left`: Spatial movements across 3D departments.
   - `agent:ping` / `agent:pong`: Connection keep-alive heartbeat.
+

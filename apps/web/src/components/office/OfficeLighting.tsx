@@ -72,3 +72,4 @@ export const OfficeLighting: React.FC = () => {
     </group>
   );
 };
+

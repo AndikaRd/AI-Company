@@ -133,3 +133,4 @@ The database seed (`apps/api/prisma/seed.ts`) idempotently registers:
    - Quality Assurance (`ZONE_QA`, `#ef4444`)
    - Administration (`ZONE_ADMIN`, `#6366f1`)
 3. **Employees**: 0 seeded records (Zero fake executions or mock activity per Sprint 1 engineering requirements).
+

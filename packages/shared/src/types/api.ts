@@ -13,3 +13,4 @@ export interface ApiErrorResponse {
   timestamp: string;
   path?: string;
 }
+

@@ -13,3 +13,4 @@ export const UpdateDepartmentSchema = CreateDepartmentSchema.partial().omit({ co
 
 export type CreateDepartmentInput = z.infer<typeof CreateDepartmentSchema>;
 export type UpdateDepartmentInput = z.infer<typeof UpdateDepartmentSchema>;
+

@@ -28,3 +28,4 @@ export const UpdateEmployeeSchema = CreateEmployeeSchema.partial().omit({ depart
 export type CreateEmployeeInput = z.infer<typeof CreateEmployeeSchema>;
 export type UpdateEmployeeInput = z.infer<typeof UpdateEmployeeSchema>;
 export type AgentConfigInput = z.infer<typeof AgentConfigSchema>;
+

@@ -8,3 +8,4 @@ import { CompanyService } from './company.service';
   exports: [CompanyService],
 })
 export class CompanyModule {}
+

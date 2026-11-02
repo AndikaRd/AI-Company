@@ -150,3 +150,4 @@ Example response:
 - [Frontend Architecture](file:///docs/architecture/frontend-architecture.md)
 - [Backend Architecture](file:///docs/architecture/backend-architecture.md)
 - [Database Design & ERD](file:///docs/database/database-design.md)
+

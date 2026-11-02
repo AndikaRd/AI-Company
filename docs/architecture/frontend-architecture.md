@@ -77,3 +77,4 @@ When GLB avatar loading is implemented in Sprint 2, the GLB asset will simply mo
 Two lightweight Zustand stores manage frontend state without Redux boilerplate:
 - **`useCompanyStore`**: Holds active company details, department lists, employee stats, and `/api/health` telemetry.
 - **`useOfficeStore`**: Holds camera presets, selected department info, grid toggles, label visibility, and lighting modes.
+

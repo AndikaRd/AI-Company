@@ -25,3 +25,4 @@ export interface DepartmentWithCounts extends Department {
     employees: number;
   };
 }
+

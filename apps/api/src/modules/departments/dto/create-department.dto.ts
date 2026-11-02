@@ -35,3 +35,4 @@ export class CreateDepartmentDto {
   @IsNotEmpty()
   companyId: string;
 }
+

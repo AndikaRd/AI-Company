@@ -19,3 +19,4 @@ export interface AgentStatusChangedPayload {
   status: 'ACTIVE' | 'IDLE' | 'BUSY' | 'OFFLINE';
   timestamp: string;
 }
+

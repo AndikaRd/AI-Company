@@ -18,3 +18,4 @@ export interface Employee {
   department?: Department;
   agentConfig?: AgentConfiguration | null;
 }
+

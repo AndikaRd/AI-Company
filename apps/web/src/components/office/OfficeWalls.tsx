@@ -119,3 +119,4 @@ export const OfficeWalls: React.FC = () => {
     </group>
   );
 };
+
