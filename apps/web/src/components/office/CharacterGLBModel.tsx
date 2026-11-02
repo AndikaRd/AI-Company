@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF, useAnimations, Html } from '@react-three/drei';
 import * as THREE from 'three';
+import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { CharacterAssetsService } from '../../services/character-assets.service';
 import { Employee, CharacterAnimationState, EmployeeActivityState } from '@vac/shared';
 
@@ -30,13 +31,13 @@ export const CharacterGLBModel: React.FC<CharacterGLBModelProps> = ({
   // 1. Resolve character asset metadata from registry
   const asset = CharacterAssetsService.getAssetForEmployee(employee);
 
-  // 2. Load GLB via Drei's pipeline
-  const { scene, animations } = useGLTF(asset.glbUrl);
+  // 2. Load GLB via Drei's pipeline with local Draco decoder support
+  const { scene, animations } = useGLTF(asset.glbUrl, '/draco/');
   const { actions, names } = useAnimations(animations, groupRef);
 
-  // 3. Clone scene to allow multiple independent character instances if needed
+  // 3. Clone scene using SkeletonUtils to properly preserve skinned meshes and bone bindings
   const clonedScene = React.useMemo(() => {
-    const clone = scene.clone(true);
+    const clone = SkeletonUtils.clone(scene);
     const isAlex = employee.employeeCode === 'VAC-ENG-001' || asset.slug === 'alex-mercer';
 
     clone.traverse((child: any) => {
@@ -238,3 +239,10 @@ export const CharacterGLBModel: React.FC<CharacterGLBModelProps> = ({
     </group>
   );
 };
+
+// Preload all 5 employee GLB assets with local Draco decoder
+useGLTF.preload('/assets/characters/elena-rostova/character.glb', '/draco/');
+useGLTF.preload('/assets/characters/marcus-vance/character.glb', '/draco/');
+useGLTF.preload('/assets/characters/alex-mercer/character.glb', '/draco/');
+useGLTF.preload('/assets/characters/maya-patel/character.glb', '/draco/');
+useGLTF.preload('/assets/characters/sophia-lin/character.glb', '/draco/');

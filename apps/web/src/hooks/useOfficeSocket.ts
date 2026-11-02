@@ -8,10 +8,16 @@ const SOCKET_URL = import.meta.env.VITE_WS_URL || 'http://localhost:3000';
 
 export const useOfficeSocket = () => {
   const socketRef = useRef<Socket | null>(null);
-  const { setSocketConnected, setAllActivities, updateEmployeeActivity } = useOfficeStore();
+  const {
+    setSocketConnected,
+    setConnectionState,
+    setAllActivities,
+    updateEmployeeActivity,
+  } = useOfficeStore();
 
   useEffect(() => {
     // 1. Initial State Sync via REST API for immediate rendering
+    setConnectionState('CONNECTING');
     api
       .getEmployeesActivity()
       .then((activities) => {
@@ -36,14 +42,19 @@ export const useOfficeSocket = () => {
 
     socket.on('connect', () => {
       console.log('[OfficeSocket] Connected to backend events gateway:', socket.id);
-      setSocketConnected(true);
+      setConnectionState('CONNECTED');
       // Request active office state snapshot
       socket.emit('office:get_state');
     });
 
     socket.on('disconnect', (reason) => {
       console.log('[OfficeSocket] Disconnected:', reason);
-      setSocketConnected(false);
+      setConnectionState('DISCONNECTED');
+    });
+
+    socket.on('connect_error', (error) => {
+      console.warn('[OfficeSocket] Connection error:', error.message);
+      setConnectionState('ERROR');
     });
 
     socket.on('connection_established', (data: any) => {

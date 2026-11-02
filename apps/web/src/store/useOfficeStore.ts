@@ -22,6 +22,7 @@ interface OfficeState {
   // Sprint 6: Real-time Employee Activities & Socket state
   employeeActivities: Record<string, EmployeeActivityInfo>;
   isSocketConnected: boolean;
+  connectionState: 'CONNECTED' | 'CONNECTING' | 'DISCONNECTED' | 'ERROR';
 
   // Actions
   setPreset: (preset: CameraPreset) => void;
@@ -39,6 +40,7 @@ interface OfficeState {
   setAllActivities: (activities: Record<string, EmployeeActivityInfo>) => void;
   updateEmployeeActivity: (payload: EmployeeActivityUpdatedPayload) => void;
   setSocketConnected: (connected: boolean) => void;
+  setConnectionState: (state: 'CONNECTED' | 'CONNECTING' | 'DISCONNECTED' | 'ERROR') => void;
 }
 
 export const CAMERA_PRESETS: CameraPreset[] = [
@@ -93,6 +95,7 @@ export const useOfficeStore = create<OfficeState>((set) => ({
   lightingMode: 'daylight',
   employeeActivities: {},
   isSocketConnected: false,
+  connectionState: 'CONNECTING',
 
   setPreset: (preset: CameraPreset) =>
     set({
@@ -154,6 +157,15 @@ export const useOfficeStore = create<OfficeState>((set) => ({
       };
     }),
 
-  setSocketConnected: (connected) => set({ isSocketConnected: connected }),
+  setSocketConnected: (connected) =>
+    set({
+      isSocketConnected: connected,
+      connectionState: connected ? 'CONNECTED' : 'DISCONNECTED',
+    }),
+  setConnectionState: (state) =>
+    set({
+      connectionState: state,
+      isSocketConnected: state === 'CONNECTED',
+    }),
 }));
 

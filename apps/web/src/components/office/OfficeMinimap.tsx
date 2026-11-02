@@ -13,7 +13,7 @@ export const OfficeMinimap: React.FC<OfficeMinimapProps> = ({ onSelectEmployee }
     setPreset,
     focusPosition,
     employeeActivities,
-    isSocketConnected,
+    connectionState,
   } = useOfficeStore();
   const { employees } = useCompanyStore();
 
@@ -75,13 +75,31 @@ export const OfficeMinimap: React.FC<OfficeMinimapProps> = ({ onSelectEmployee }
             <Compass className="w-3.5 h-3.5 text-cyan-400" />
             <span>HQ Radar</span>
           </div>
-          <div className="flex items-center gap-1 text-[9px] font-mono">
+          <div className="flex items-center gap-1.5 text-[9px] font-mono">
             <span
               className={`w-1.5 h-1.5 rounded-full ${
-                isSocketConnected ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'
+                connectionState === 'CONNECTED'
+                  ? 'bg-emerald-400 animate-pulse'
+                  : connectionState === 'CONNECTING'
+                  ? 'bg-amber-400 animate-ping'
+                  : connectionState === 'ERROR'
+                  ? 'bg-rose-500'
+                  : 'bg-slate-500'
               }`}
             />
-            <span className="text-slate-400">{isSocketConnected ? 'LIVE' : 'SYNC'}</span>
+            <span
+              className={`font-semibold ${
+                connectionState === 'CONNECTED'
+                  ? 'text-emerald-400'
+                  : connectionState === 'CONNECTING'
+                  ? 'text-amber-400'
+                  : connectionState === 'ERROR'
+                  ? 'text-rose-400'
+                  : 'text-slate-400'
+              }`}
+            >
+              {connectionState}
+            </span>
           </div>
         </div>
 

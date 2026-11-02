@@ -15,14 +15,14 @@ export const OfficeFurniture: React.FC<OfficeFurnitureProps> = ({ onSelectAgent 
         if (e.workstationId) {
           const ws = e.workstationId.toLowerCase();
           if (ws === `${deptSlug}-${slotIndex}`) return true;
-          if (deptSlug === 'technology' && ws === `ws-tech-${slotIndex}`) return true;
-          if (deptSlug === 'operations' && ws === `ws-ops-${slotIndex}`) return true;
-          if (deptSlug === 'engineering' && ws === `ws-eng-${slotIndex}`) return true;
-          if (deptSlug === 'quality-assurance' && ws === `ws-qa-${slotIndex}`) return true;
-          if (deptSlug === 'research' && ws === `ws-res-${slotIndex}`) return true;
+          if (deptSlug === 'technology' && (ws === `ws-tech-${slotIndex}` || ws === `technology-${slotIndex}`)) return true;
+          if (deptSlug === 'operations' && (ws === `ws-ops-${slotIndex}` || ws === `operations-${slotIndex}`)) return true;
+          if (deptSlug === 'engineering' && (ws === `ws-eng-${slotIndex}` || ws === `engineering-${slotIndex}`)) return true;
+          if (deptSlug === 'quality-assurance' && (ws === `ws-qa-${slotIndex}` || ws === `quality-assurance-${slotIndex}`)) return true;
+          if (deptSlug === 'research' && (ws === `ws-res-${slotIndex}` || ws === `research-${slotIndex}`)) return true;
         }
-        // Fallback: match first active employee of department to slot 1
-        if (slotIndex === 1 && e.department?.slug === deptSlug) {
+        // Fallback: match primary employee of department to slot 1
+        if (slotIndex === 1 && (e.department?.slug === deptSlug || (deptSlug === 'operations' && e.employeeCode === 'VAC-OPS-001'))) {
           return true;
         }
         return false;

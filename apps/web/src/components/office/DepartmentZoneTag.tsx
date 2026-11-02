@@ -6,7 +6,7 @@ import { useCompanyStore } from '../../store/useCompanyStore';
 
 export const DepartmentZoneTags: React.FC = () => {
   const { showLabels, selectZone, setHoveredZone, selectedZone } = useOfficeStore();
-  const { departments } = useCompanyStore();
+  const { departments, employees } = useCompanyStore();
 
   if (!showLabels) return null;
 
@@ -17,7 +17,10 @@ export const DepartmentZoneTags: React.FC = () => {
         const backendDept = departments.find(
           (d) => d.slug === dept.slug || d.name.toLowerCase() === dept.name.toLowerCase(),
         );
-        const employeeCount = backendDept?._count?.employees || 0;
+        const employeeCount =
+          backendDept?._count?.employees !== undefined
+            ? backendDept._count.employees
+            : employees.filter((e) => e.department?.slug === dept.slug).length;
         const isSelected = selectedZone?.slug === dept.slug;
 
         return (

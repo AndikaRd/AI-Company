@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { OfficeScene } from '../components/office/OfficeScene';
 import { OfficeControlsOverlay } from '../components/office/OfficeControlsOverlay';
 import { OfficeMinimap } from '../components/office/OfficeMinimap';
@@ -10,12 +10,18 @@ import { useOfficeSocket } from '../hooks/useOfficeSocket';
 import { Employee } from '@vac/shared';
 
 export const VirtualOfficePage: React.FC = () => {
-  const { employees } = useCompanyStore();
+  const { employees, fetchData, fetchEmployees } = useCompanyStore();
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [activeChatEmployee, setActiveChatEmployee] = useState<Employee | null>(null);
   const [activeMemoryEmployee, setActiveMemoryEmployee] = useState<Employee | null>(null);
 
-  // Initialize Socket.IO connection and real-time activity synchronization
+  // 1. Initial REST data load independent of WebSockets
+  useEffect(() => {
+    fetchData();
+    fetchEmployees();
+  }, [fetchData, fetchEmployees]);
+
+  // 2. Initialize Socket.IO connection and real-time activity synchronization
   useOfficeSocket();
 
   const handleSelectAgent = (employeeId: string) => {

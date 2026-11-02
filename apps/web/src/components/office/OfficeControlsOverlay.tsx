@@ -168,9 +168,9 @@ export const OfficeControlsOverlay: React.FC = () => {
               </Badge>
             </div>
 
-            <div className="mt-2 text-[11px] text-slate-500 font-mono flex items-center gap-1.5">
-              <Cpu className="w-3.5 h-3.5 text-cyan-500" />
-              <span>GLB Characters Mount Ready (Sprint 2)</span>
+            <div className="mt-2 text-[11px] text-emerald-400 font-mono flex items-center gap-1.5">
+              <Cpu className="w-3.5 h-3.5 text-emerald-400" />
+              <span>3D AI Employee Visual Rig Active</span>
             </div>
           </Card>
         )}
