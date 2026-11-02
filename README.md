@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Virtual AI Company (VAC)
 
 > An enterprise-grade platform where AI employees collaborate inside an interactive isometric 3D virtual office.
@@ -151,3 +152,6 @@ Example response:
 - [Backend Architecture](file:///docs/architecture/backend-architecture.md)
 - [Database Design & ERD](file:///docs/database/database-design.md)
 
+=======
+# AI-Company
+>>>>>>> origin/main
