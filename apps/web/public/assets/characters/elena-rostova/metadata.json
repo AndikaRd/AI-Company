@@ -1,0 +1,29 @@
+{
+  "employeeCode": "VAC-OPS-001",
+  "employeeName": "Elena Rostova",
+  "role": "Chief Operating Officer / Chief of Staff",
+  "department": "operations",
+  "modelFile": "character.glb",
+  "previewFile": "preview.png",
+  "format": "GLB",
+  "fileSizeMb": 1.75,
+  "source": "Ready Player Me / Three.js Samples",
+  "license": "Creative Commons Attribution / Permissive Web Demo",
+  "attribution": "Ready Player Me avatar asset via Three.js repository",
+  "rigType": "Humanoid Skeletal Rig (78 nodes)",
+  "availableClips": [],
+  "animationMapping": {
+    "IDLE": { "type": "procedural_fallback", "behavior": "breathing_subtle_posture" },
+    "WALKING": { "type": "procedural_fallback", "behavior": "torso_bobbing_stride" },
+    "SITTING_WORKING": { "type": "procedural_fallback", "behavior": "seated_executive_desk_monitoring" },
+    "TALKING": { "type": "procedural_fallback", "behavior": "head_nod_authoritative_gestures" },
+    "MEETING": { "type": "procedural_fallback", "behavior": "conference_seated_command_posture" },
+    "THINKING": { "type": "procedural_fallback", "behavior": "analytical_head_tilt" }
+  },
+  "scale": [1.15, 1.15, 1.15],
+  "visualAttributes": {
+    "apparel": "Smart executive business attire, sharp blazer",
+    "palette": { "primary": "#1e1b4b", "accent": "#06b6d4" },
+    "badge": "VAC-OPS-001 Executive Gold ID"
+  }
+}

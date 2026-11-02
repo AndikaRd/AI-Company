@@ -1,0 +1,29 @@
+{
+  "employeeCode": "VAC-RES-001",
+  "employeeName": "Dr. Maya Patel",
+  "role": "Principal Research Specialist",
+  "department": "research",
+  "modelFile": "character.glb",
+  "previewFile": "preview.png",
+  "format": "GLB",
+  "fileSizeMb": 0.94,
+  "source": "Three.js Examples (kira)",
+  "license": "MIT / Permissive Web Demo",
+  "attribution": "Three.js kira character asset",
+  "rigType": "Stylized Humanoid Rig (56 nodes)",
+  "availableClips": [],
+  "animationMapping": {
+    "IDLE": { "type": "procedural_fallback", "behavior": "breathing_intellectual_posture" },
+    "WALKING": { "type": "procedural_fallback", "behavior": "torso_bobbing_stride" },
+    "SITTING_WORKING": { "type": "procedural_fallback", "behavior": "seated_literature_synthesis_posture" },
+    "TALKING": { "type": "procedural_fallback", "behavior": "academic_exposition_gestures" },
+    "MEETING": { "type": "procedural_fallback", "behavior": "conference_observing_notes" },
+    "THINKING": { "type": "procedural_fallback", "behavior": "pensive_research_look" }
+  },
+  "scale": [1.05, 1.05, 1.05],
+  "visualAttributes": {
+    "apparel": "Stylized academic lab coat / scholarly blazer, glasses, research notebook",
+    "palette": { "primary": "#6b21a8", "accent": "#8b5cf6" },
+    "badge": "VAC-RES-001 Principal Researcher Badge"
+  }
+}

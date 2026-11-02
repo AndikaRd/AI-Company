@@ -13,3 +13,4 @@ import { MemoryController } from './memory.controller';
   exports: [MemoryIngestionService, MemoryRetrievalService, OllamaEmbeddingProvider],
 })
 export class MemoryModule {}
+

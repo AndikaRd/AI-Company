@@ -186,3 +186,4 @@ ALTER TABLE "memory_access_logs" ADD CONSTRAINT "memory_access_logs_memory_id_fk
 
 -- AddForeignKey
 ALTER TABLE "memory_access_logs" ADD CONSTRAINT "memory_access_logs_accessed_by_employee_id_fkey" FOREIGN KEY ("accessed_by_employee_id") REFERENCES "employees"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+

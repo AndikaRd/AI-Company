@@ -12,6 +12,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { OllamaService } from '../ollama/ollama.service';
 import { AgentCommunicationService } from '../agent-communication/agent-communication.service';
 import { MemoryRetrievalService } from '../memory/memory-retrieval.service';
+import { EmployeeActivityService } from '../employees/employee-activity.service';
 import { DecomposeTaskDto, TaskDecompositionPlanDto, SubtaskDefinitionDto } from '@vac/shared';
 
 @Injectable()
@@ -25,6 +26,9 @@ export class TaskOrchestratorService {
     private readonly agentComms: AgentCommunicationService,
     @Optional()
     private readonly memoryRetrieval?: MemoryRetrievalService,
+    @Optional()
+    @Inject(forwardRef(() => EmployeeActivityService))
+    private readonly activityService?: EmployeeActivityService,
   ) {}
 
   /**
@@ -60,6 +64,14 @@ export class TaskOrchestratorService {
       throw new ForbiddenException(
         `Unauthorized: Employee '${coordinator.firstName}' does not hold orchestration authority.`,
       );
+    }
+
+    if (this.activityService) {
+      await this.activityService.setActivity(coordinator.id, 'THINKING', {
+        currentTaskId: parentTask.id,
+        taskTitle: parentTask.title,
+        details: 'Synthesizing task decomposition plan via Ollama',
+      });
     }
 
     this.logger.log(
@@ -186,6 +198,14 @@ export class TaskOrchestratorService {
         },
       },
     });
+
+    if (this.activityService) {
+      await this.activityService.setActivity(coordinator.id, 'IDLE', {
+        currentTaskId: null,
+        taskTitle: null,
+        details: 'Task decomposition complete',
+      });
+    }
 
     return {
       plan: {
@@ -326,6 +346,14 @@ export class TaskOrchestratorService {
         include: { agentConfig: true },
       });
 
+      if (coo && this.activityService) {
+        await this.activityService.setActivity(coo.id, 'WORKING', {
+          currentTaskId: parentTaskId,
+          taskTitle: parentTask.title,
+          details: 'Synthesizing Executive Briefing via Ollama',
+        });
+      }
+
       let summary = '';
 
       if (coo && coo.agentConfig) {
@@ -392,6 +420,14 @@ export class TaskOrchestratorService {
           },
         },
       });
+
+      if (coo && this.activityService) {
+        await this.activityService.setActivity(coo.id, 'IDLE', {
+          currentTaskId: null,
+          taskTitle: null,
+          details: 'Executive briefing finalized',
+        });
+      }
 
       return true;
     }

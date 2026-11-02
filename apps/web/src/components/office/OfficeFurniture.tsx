@@ -10,7 +10,24 @@ export const OfficeFurniture: React.FC<OfficeFurnitureProps> = ({ onSelectAgent 
   const { employees } = useCompanyStore();
 
   const getAgent = (deptSlug: string, slotIndex: number) => {
-    return employees.find((e) => e.workstationId === `${deptSlug}-${slotIndex}`) || null;
+    return (
+      employees.find((e) => {
+        if (e.workstationId) {
+          const ws = e.workstationId.toLowerCase();
+          if (ws === `${deptSlug}-${slotIndex}`) return true;
+          if (deptSlug === 'technology' && ws === `ws-tech-${slotIndex}`) return true;
+          if (deptSlug === 'operations' && ws === `ws-ops-${slotIndex}`) return true;
+          if (deptSlug === 'engineering' && ws === `ws-eng-${slotIndex}`) return true;
+          if (deptSlug === 'quality-assurance' && ws === `ws-qa-${slotIndex}`) return true;
+          if (deptSlug === 'research' && ws === `ws-res-${slotIndex}`) return true;
+        }
+        // Fallback: match first active employee of department to slot 1
+        if (slotIndex === 1 && e.department?.slug === deptSlug) {
+          return true;
+        }
+        return false;
+      }) || null
+    );
   };
 
   return (
@@ -123,6 +140,8 @@ export const OfficeFurniture: React.FC<OfficeFurnitureProps> = ({ onSelectAgent 
         screenColor="#8b5cf6"
         departmentSlug="research"
         slotIndex={1}
+        assignedAgent={getAgent('research', 1)}
+        onSelectAgent={onSelectAgent}
       />
       <Workstation
         position={[9, 0, -9]}
@@ -130,6 +149,8 @@ export const OfficeFurniture: React.FC<OfficeFurnitureProps> = ({ onSelectAgent 
         screenColor="#a855f7"
         departmentSlug="research"
         slotIndex={2}
+        assignedAgent={getAgent('research', 2)}
+        onSelectAgent={onSelectAgent}
       />
       <Workstation
         position={[8, 0, -6.5]}
@@ -137,6 +158,8 @@ export const OfficeFurniture: React.FC<OfficeFurnitureProps> = ({ onSelectAgent 
         screenColor="#c084fc"
         departmentSlug="research"
         slotIndex={3}
+        assignedAgent={getAgent('research', 3)}
+        onSelectAgent={onSelectAgent}
       />
 
       {/* ========================================================
@@ -148,6 +171,8 @@ export const OfficeFurniture: React.FC<OfficeFurnitureProps> = ({ onSelectAgent 
         screenColor="#f59e0b"
         departmentSlug="business-analysis"
         slotIndex={1}
+        assignedAgent={getAgent('business-analysis', 1)}
+        onSelectAgent={onSelectAgent}
       />
       <Workstation
         position={[-8, 0, 1]}
@@ -155,6 +180,8 @@ export const OfficeFurniture: React.FC<OfficeFurnitureProps> = ({ onSelectAgent 
         screenColor="#f59e0b"
         departmentSlug="business-analysis"
         slotIndex={2}
+        assignedAgent={getAgent('business-analysis', 2)}
+        onSelectAgent={onSelectAgent}
       />
 
       {/* ========================================================
@@ -166,6 +193,8 @@ export const OfficeFurniture: React.FC<OfficeFurnitureProps> = ({ onSelectAgent 
         screenColor="#ec4899"
         departmentSlug="creative"
         slotIndex={1}
+        assignedAgent={getAgent('creative', 1)}
+        onSelectAgent={onSelectAgent}
       />
       <Workstation
         position={[8, 0, 1]}
@@ -173,6 +202,8 @@ export const OfficeFurniture: React.FC<OfficeFurnitureProps> = ({ onSelectAgent 
         screenColor="#f43f5e"
         departmentSlug="creative"
         slotIndex={2}
+        assignedAgent={getAgent('creative', 2)}
+        onSelectAgent={onSelectAgent}
       />
       {/* Large Creative Design Display Board */}
       <mesh position={[11, 1.5, 0]} castShadow>
@@ -193,6 +224,8 @@ export const OfficeFurniture: React.FC<OfficeFurnitureProps> = ({ onSelectAgent 
         screenColor="#06b6d4"
         departmentSlug="operations"
         slotIndex={1}
+        assignedAgent={getAgent('operations', 1)}
+        onSelectAgent={onSelectAgent}
       />
       <Workstation
         position={[-8, 0, 9]}
@@ -200,6 +233,8 @@ export const OfficeFurniture: React.FC<OfficeFurnitureProps> = ({ onSelectAgent 
         screenColor="#06b6d4"
         departmentSlug="operations"
         slotIndex={2}
+        assignedAgent={getAgent('operations', 2)}
+        onSelectAgent={onSelectAgent}
       />
 
       {/* ========================================================
@@ -211,6 +246,8 @@ export const OfficeFurniture: React.FC<OfficeFurnitureProps> = ({ onSelectAgent 
         screenColor="#ef4444"
         departmentSlug="quality-assurance"
         slotIndex={1}
+        assignedAgent={getAgent('quality-assurance', 1)}
+        onSelectAgent={onSelectAgent}
       />
       <Workstation
         position={[1, 0, 8]}
@@ -218,6 +255,8 @@ export const OfficeFurniture: React.FC<OfficeFurnitureProps> = ({ onSelectAgent 
         screenColor="#ef4444"
         departmentSlug="quality-assurance"
         slotIndex={2}
+        assignedAgent={getAgent('quality-assurance', 2)}
+        onSelectAgent={onSelectAgent}
       />
 
       {/* ========================================================

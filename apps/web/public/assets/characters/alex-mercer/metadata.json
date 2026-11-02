@@ -1,0 +1,35 @@
+{
+  "employeeCode": "VAC-ENG-001",
+  "employeeName": "Alex Mercer",
+  "role": "Senior Software Engineer",
+  "department": "engineering",
+  "modelFile": "character.glb",
+  "previewFile": "preview.png",
+  "format": "GLB",
+  "fileSizeMb": 2.06,
+  "source": "Three.js Examples / Mixamo Rig",
+  "license": "MIT / Permissive Web Demo",
+  "attribution": "Three.js Soldier skinned humanoid model",
+  "rigType": "Humanoid Skeletal Rig (68 nodes)",
+  "availableClips": [
+    "Idle",
+    "Run",
+    "TPose",
+    "Walk"
+  ],
+  "animationMapping": {
+    "IDLE": { "type": "clip", "clipName": "Idle" },
+    "WALKING": { "type": "clip", "clipName": "Walk" },
+    "SITTING_WORKING": { "type": "procedural_fallback", "behavior": "seated_mechanical_keyboard_coding" },
+    "TALKING": { "type": "procedural_fallback", "behavior": "head_nod_peer_explanation" },
+    "MEETING": { "type": "clip", "clipName": "Idle" },
+    "THINKING": { "type": "procedural_fallback", "behavior": "chin_touch_code_inspection" }
+  },
+  "scale": [1.1, 1.1, 1.1],
+  "visualAttributes": {
+    "apparel": "Navy hoodie, charcoal trousers, sneakers, wireless tech headset",
+    "palette": { "primary": "#0369a1", "accent": "#10b981" },
+    "badge": "VAC-ENG-001 Senior SWE Badge",
+    "accessories": ["Headset", "Smart Watch", "AR Glasses"]
+  }
+}

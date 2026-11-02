@@ -22,6 +22,7 @@ import {
   QueryMemoryDto,
   RetrievedMemoryItem,
   MemoryAccessLog,
+  EmployeeActivityInfo,
 } from '@vac/shared';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
@@ -323,6 +324,16 @@ class ApiService {
 
   async getMemoryAccessLogs(limit = 50): Promise<MemoryAccessLog[]> {
     return this.request(`/memory/access-logs?limit=${limit}`);
+  }
+
+  // --- Sprint 6: Real-time Employee Activity ---
+
+  async getEmployeesActivity(): Promise<Record<string, EmployeeActivityInfo>> {
+    return this.request('/employees/activity');
+  }
+
+  async getEmployeeActivity(id: string): Promise<EmployeeActivityInfo> {
+    return this.request(`/employees/${id}/activity`);
   }
 }
 

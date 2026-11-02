@@ -9,12 +9,36 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { EmployeesService } from './employees.service';
+import { EmployeeActivityService } from './employee-activity.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { SendChatMessageDto } from '../ollama/dto/chat-message.dto';
 
 @Controller('employees')
 export class EmployeesController {
-  constructor(private readonly employeesService: EmployeesService) {}
+  constructor(
+    private readonly employeesService: EmployeesService,
+    private readonly activityService: EmployeeActivityService,
+  ) {}
+
+  @Get('activity')
+  async getAllActivities() {
+    const data = this.activityService.getAllActivities();
+    return {
+      success: true,
+      data,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Get(':id/activity')
+  async getEmployeeActivity(@Param('id', ParseUUIDPipe) id: string) {
+    const data = this.activityService.getActivity(id);
+    return {
+      success: true,
+      data,
+      timestamp: new Date().toISOString(),
+    };
+  }
 
   @Get()
   async findAll(@Query('departmentId') departmentId?: string) {

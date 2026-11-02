@@ -88,3 +88,4 @@ export class OllamaEmbeddingProvider implements IEmbeddingProvider {
     }
   }
 }
+

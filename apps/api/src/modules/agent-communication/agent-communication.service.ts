@@ -6,6 +6,7 @@ import {
   ForbiddenException,
   Inject,
   forwardRef,
+  Optional,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -14,6 +15,9 @@ import {
   RespondToDelegationDto,
 } from './dto/agent-message.dto';
 import { TaskRunnerService } from '../tasks/task-runner.service';
+import { EmployeeActivityService } from '../employees/employee-activity.service';
+import { EventsGateway } from '../events/events.gateway';
+import { SocketEvents } from '@vac/shared';
 import { randomUUID } from 'crypto';
 
 @Injectable()
@@ -25,6 +29,12 @@ export class AgentCommunicationService {
     private readonly prisma: PrismaService,
     @Inject(forwardRef(() => TaskRunnerService))
     private readonly taskRunner: TaskRunnerService,
+    @Optional()
+    @Inject(forwardRef(() => EmployeeActivityService))
+    private readonly activityService?: EmployeeActivityService,
+    @Optional()
+    @Inject(forwardRef(() => EventsGateway))
+    private readonly eventsGateway?: EventsGateway,
   ) {}
 
   /**
@@ -80,6 +90,21 @@ export class AgentCommunicationService {
     this.logger.log(
       `[AgentMessage] [${message.messageType}] from ${sender.firstName} (${sender.employeeCode}) to ${recipient.firstName} (${recipient.employeeCode}) - Correlation: ${correlationId}`,
     );
+
+    // Trigger visual talking animation state and broadcast message event for 3D office
+    if (this.activityService) {
+      this.activityService.triggerTalkingState(dto.senderEmployeeId, dto.recipientEmployeeId);
+    }
+    if (this.eventsGateway) {
+      this.eventsGateway.broadcastOfficeEvent(SocketEvents.AGENT_MESSAGE_CREATED, {
+        messageId: message.id,
+        senderEmployeeId: dto.senderEmployeeId,
+        recipientEmployeeId: dto.recipientEmployeeId,
+        messageType: message.messageType,
+        correlationId,
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     return message;
   }

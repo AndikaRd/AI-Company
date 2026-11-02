@@ -4,3 +4,4 @@ export interface IEmbeddingProvider {
   getDimension(): number;
   isAvailable(): Promise<boolean>;
 }
+

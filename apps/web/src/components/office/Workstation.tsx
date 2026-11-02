@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { CharacterAnchor } from './CharacterAnchor';
 import { CharacterModel } from './CharacterModel';
+import { CharacterGLBModel } from './CharacterGLBModel';
+import { useOfficeStore } from '../../store/useOfficeStore';
 import { Employee } from '@vac/shared';
 
 interface WorkstationProps {
@@ -22,6 +24,19 @@ export const Workstation: React.FC<WorkstationProps> = ({
   assignedAgent = null,
   onSelectAgent,
 }) => {
+  const { employeeActivities } = useOfficeStore();
+  const activityInfo = assignedAgent ? employeeActivities[assignedAgent.id] : null;
+  const activityState = activityInfo?.activity || 'IDLE';
+  const animationState = activityInfo?.animationState || 'working';
+  const taskTitle = activityInfo?.taskTitle || null;
+
+  // Dynamic screen glow based on real-time activity
+  let displayColor = screenColor;
+  if (activityState === 'WORKING') displayColor = '#06b6d4';
+  else if (activityState === 'THINKING') displayColor = '#a855f7';
+  else if (activityState === 'WAITING_APPROVAL') displayColor = '#f59e0b';
+  else if (activityState === 'TALKING') displayColor = '#10b981';
+
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
       {/* --- DESK SURFACE --- */}
@@ -64,13 +79,13 @@ export const Workstation: React.FC<WorkstationProps> = ({
       {/* Glowing Screen Display */}
       <mesh position={[0, 0.95, -0.205]}>
         <planeGeometry args={[0.76, 0.34]} />
-        <meshBasicMaterial color={screenColor} />
+        <meshBasicMaterial color={displayColor} />
       </mesh>
 
       {/* Subtle Screen Light Glow */}
       <pointLight
         position={[0, 0.95, -0.1]}
-        color={screenColor}
+        color={displayColor}
         intensity={0.25}
         distance={1.5}
       />
@@ -109,18 +124,32 @@ export const Workstation: React.FC<WorkstationProps> = ({
         </mesh>
       </group>
 
-      {/* Render Character Model if an Agent is assigned to this workstation */}
+      {/* Render Character GLB Model if an Agent is assigned to this workstation */}
       {assignedAgent ? (
-        <CharacterModel
-          employeeId={assignedAgent.id}
-          employeeCode={assignedAgent.employeeCode ?? undefined}
-          name={`${assignedAgent.firstName} ${assignedAgent.lastName}`}
-          modelUrl={assignedAgent.avatarUrl || '/assets/characters/alex.glb'}
-          animationState="working"
-          position={[0, 0, 0.55]}
-          rotationY={Math.PI} // Faces towards desk monitor
-          onSelectAgent={onSelectAgent}
-        />
+        <Suspense
+          fallback={
+            <CharacterModel
+              employeeId={assignedAgent.id}
+              employeeCode={assignedAgent.employeeCode ?? undefined}
+              name={`${assignedAgent.firstName} ${assignedAgent.lastName}`}
+              modelUrl={assignedAgent.avatarUrl || '/assets/characters/alex.glb'}
+              animationState={animationState}
+              position={[0, 0, 0.55]}
+              rotationY={Math.PI}
+              onSelectAgent={onSelectAgent}
+            />
+          }
+        >
+          <CharacterGLBModel
+            employee={assignedAgent}
+            position={[0, 0, 0.55]}
+            rotationY={Math.PI}
+            animationState={animationState}
+            activityState={activityState}
+            taskTitle={taskTitle}
+            onSelectAgent={onSelectAgent}
+          />
+        </Suspense>
       ) : (
         /* Anchor coordinates indicator for empty workstation */
         <CharacterAnchor

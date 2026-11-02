@@ -1,0 +1,32 @@
+{
+  "employeeCode": "VAC-QA-001",
+  "employeeName": "Sophia Lin",
+  "role": "Senior Quality Assurance Engineer",
+  "department": "quality-assurance",
+  "modelFile": "character.glb",
+  "previewFile": "preview.png",
+  "format": "GLB",
+  "fileSizeMb": 3.13,
+  "source": "Three.js Examples (Michelle)",
+  "license": "MIT / Permissive Web Demo",
+  "attribution": "Three.js Michelle skinned humanoid character",
+  "rigType": "Humanoid Skeletal Rig (67 nodes)",
+  "availableClips": [
+    "SambaDance",
+    "TPose"
+  ],
+  "animationMapping": {
+    "IDLE": { "type": "procedural_fallback", "behavior": "alert_standing_quality_posture" },
+    "WALKING": { "type": "procedural_fallback", "behavior": "torso_bobbing_stride" },
+    "SITTING_WORKING": { "type": "procedural_fallback", "behavior": "seated_qa_test_inspection_typing" },
+    "TALKING": { "type": "procedural_fallback", "behavior": "testing_boundary_explanation" },
+    "MEETING": { "type": "procedural_fallback", "behavior": "conference_seated_qa_signoff" },
+    "THINKING": { "type": "procedural_fallback", "behavior": "scrutinizing_defect_analysis" }
+  },
+  "scale": [1.1, 1.1, 1.1],
+  "visualAttributes": {
+    "apparel": "Athletic smart-casual QA tech attire, tactical sneakers, automated test tablet",
+    "palette": { "primary": "#991b1b", "accent": "#ef4444" },
+    "badge": "VAC-QA-001 Senior QA Badge"
+  }
+}

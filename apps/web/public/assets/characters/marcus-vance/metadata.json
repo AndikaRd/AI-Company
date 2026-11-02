@@ -1,0 +1,37 @@
+{
+  "employeeCode": "VAC-TECH-001",
+  "employeeName": "Marcus Vance",
+  "role": "Chief Technology Officer",
+  "department": "technology",
+  "modelFile": "character.glb",
+  "previewFile": "preview.png",
+  "format": "GLB",
+  "fileSizeMb": 2.79,
+  "source": "Three.js Examples / Mixamo Rig",
+  "license": "MIT / Permissive Web Demo",
+  "attribution": "Three.js Xbot skinned character model",
+  "rigType": "Humanoid Skeletal Rig (70 nodes)",
+  "availableClips": [
+    "agree",
+    "headShake",
+    "idle",
+    "run",
+    "sad_pose",
+    "sneak_pose",
+    "walk"
+  ],
+  "animationMapping": {
+    "IDLE": { "type": "clip", "clipName": "idle" },
+    "WALKING": { "type": "clip", "clipName": "walk" },
+    "SITTING_WORKING": { "type": "procedural_fallback", "behavior": "seated_terminal_typing_interaction" },
+    "TALKING": { "type": "clip", "clipName": "agree" },
+    "MEETING": { "type": "clip", "clipName": "idle" },
+    "THINKING": { "type": "clip", "clipName": "headShake" }
+  },
+  "scale": [1.1, 1.1, 1.1],
+  "visualAttributes": {
+    "apparel": "Modern technical executive apparel, cyber-minimalist dark suit",
+    "palette": { "primary": "#0f172a", "accent": "#38bdf8" },
+    "badge": "VAC-TECH-001 Technical Authority Badge"
+  }
+}

@@ -16,6 +16,9 @@ import { ExecutionContext } from '../tools/interfaces/tool.interface';
 import { TaskOrchestratorService } from './task-orchestrator.service';
 import { MemoryRetrievalService } from '../memory/memory-retrieval.service';
 import { MemoryIngestionService } from '../memory/memory-ingestion.service';
+import { EmployeeActivityService } from '../employees/employee-activity.service';
+import { EventsGateway } from '../events/events.gateway';
+import { SocketEvents } from '@vac/shared';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import { existsSync } from 'fs';
@@ -35,6 +38,12 @@ export class TaskRunnerService {
     private readonly memoryRetrieval?: MemoryRetrievalService,
     @Optional()
     private readonly memoryIngestion?: MemoryIngestionService,
+    @Optional()
+    @Inject(forwardRef(() => EmployeeActivityService))
+    private readonly activityService?: EmployeeActivityService,
+    @Optional()
+    @Inject(forwardRef(() => EventsGateway))
+    private readonly eventsGateway?: EventsGateway,
   ) {}
 
   /**
@@ -77,6 +86,23 @@ export class TaskRunnerService {
     this.logger.log(
       `Starting execution for Task [${task.title}] (${taskId}) assigned to [${employee.firstName} ${employee.lastName}]`,
     );
+
+    // Update real-time employee activity to WORKING and broadcast task started event
+    if (this.activityService) {
+      await this.activityService.setActivity(employee.id, 'WORKING', {
+        currentTaskId: taskId,
+        taskTitle: task.title,
+        details: `Executing task: ${task.title}`,
+      });
+    }
+    if (this.eventsGateway) {
+      this.eventsGateway.broadcastOfficeEvent(SocketEvents.EMPLOYEE_TASK_STARTED, {
+        taskId,
+        taskTitle: task.title,
+        employeeId: employee.id,
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     // 1. Resolve workspace root
     let workspaceRoot = task.workspacePath;
@@ -291,6 +317,21 @@ export class TaskRunnerService {
 
           if (pausedForApproval) {
             // Task status is set to WAITING_APPROVAL by toolRegistry
+            if (this.activityService) {
+              await this.activityService.setActivity(employee.id, 'WAITING_APPROVAL', {
+                currentTaskId: taskId,
+                taskTitle: task.title,
+                details: 'Awaiting human supervisor review',
+              });
+            }
+            if (this.eventsGateway) {
+              this.eventsGateway.broadcastOfficeEvent(SocketEvents.EMPLOYEE_APPROVAL_REQUIRED, {
+                taskId,
+                taskTitle: task.title,
+                employeeId: employee.id,
+                timestamp: new Date().toISOString(),
+              });
+            }
             return;
           }
         } else {
@@ -351,6 +392,24 @@ export class TaskRunnerService {
             },
           },
         });
+
+        // Broadcast task completion and reset activity to IDLE
+        if (this.activityService) {
+          await this.activityService.setActivity(employee.id, 'IDLE', {
+            currentTaskId: null,
+            taskTitle: null,
+            details: `Successfully completed ${task.title}`,
+          });
+        }
+        if (this.eventsGateway) {
+          this.eventsGateway.broadcastOfficeEvent(SocketEvents.EMPLOYEE_TASK_COMPLETED, {
+            taskId,
+            taskTitle: task.title,
+            employeeId: employee.id,
+            exitCode: 0,
+            timestamp: new Date().toISOString(),
+          });
+        }
 
         // Ingest task outcome as episodic memory for future retrieval
         if (this.memoryIngestion) {
@@ -581,6 +640,13 @@ export class TaskRunnerService {
       }
 
       // Resume task execution in background
+      if (this.activityService) {
+        await this.activityService.setActivity(assignedEmployee.id, 'WORKING', {
+          currentTaskId: approval.taskId,
+          taskTitle: approval.task.title,
+          details: `Resumed execution following CEO approval for ${approval.toolName}`,
+        });
+      }
       await this.runTaskAsync(approval.taskId);
     } else {
       this.logger.log(`Approval [${approvalId}] REJECTED. Task [${approval.taskId}] set to REVIEW.`);
@@ -588,6 +654,13 @@ export class TaskRunnerService {
         where: { id: approval.taskId },
         data: { status: 'REVIEW' },
       });
+      if (this.activityService) {
+        await this.activityService.setActivity(assignedEmployee.id, 'IDLE', {
+          currentTaskId: null,
+          taskTitle: null,
+          details: `Task paused: ${approval.toolName} was rejected by supervisor`,
+        });
+      }
     }
 
     return updatedApproval;

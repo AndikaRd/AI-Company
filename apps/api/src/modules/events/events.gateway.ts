@@ -8,9 +8,10 @@ import {
   MessageBody,
   ConnectedSocket,
 } from '@nestjs/websockets';
-import { Logger } from '@nestjs/common';
+import { Logger, Inject, forwardRef } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { SocketEvents, AgentStatusChangedPayload } from '@vac/shared';
+import { EmployeeActivityService } from '../employees/employee-activity.service';
 
 @WebSocketGateway({
   cors: {
@@ -23,15 +24,23 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
   private readonly logger = new Logger(EventsGateway.name);
 
+  constructor(
+    @Inject(forwardRef(() => EmployeeActivityService))
+    private readonly activityService: EmployeeActivityService,
+  ) {}
+
   afterInit(server: Server) {
     this.logger.log('EventsGateway initialized for real-time AI agent communications');
   }
 
   handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
+    const initialActivities = this.activityService ? this.activityService.getAllActivities() : {};
+
     client.emit('connection_established', {
       status: 'connected',
       socketId: client.id,
+      initialActivities,
       timestamp: new Date().toISOString(),
     });
   }
@@ -44,6 +53,15 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   handlePing(@ConnectedSocket() client: Socket, @MessageBody() data: any) {
     client.emit('agent:pong', {
       received: data,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  @SubscribeMessage('office:get_state')
+  handleGetOfficeState(@ConnectedSocket() client: Socket) {
+    const activities = this.activityService ? this.activityService.getAllActivities() : {};
+    client.emit('office:state', {
+      activities,
       timestamp: new Date().toISOString(),
     });
   }

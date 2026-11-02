@@ -8,6 +8,8 @@ import { ToolsModule } from '../tools/tools.module';
 import { OllamaModule } from '../ollama/ollama.module';
 import { AgentCommunicationModule } from '../agent-communication/agent-communication.module';
 import { MemoryModule } from '../memory/memory.module';
+import { EmployeesModule } from '../employees/employees.module';
+import { EventsModule } from '../events/events.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { MemoryModule } from '../memory/memory.module';
     OllamaModule,
     forwardRef(() => AgentCommunicationModule),
     MemoryModule,
+    forwardRef(() => EmployeesModule),
+    EventsModule,
   ],
   controllers: [TasksController],
   providers: [TasksService, TaskRunnerService, TaskOrchestratorService],
