@@ -150,3 +150,4 @@ export class EmployeeActivityService {
     }, durationMs);
   }
 }
+

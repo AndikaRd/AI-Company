@@ -748,7 +748,7 @@ process.exit(0);
     const mayaTasks = await prisma.task.findMany({
       where: {
         parentTaskId: parentTask.id,
-        assignedEmployeeId: maya.id,
+        assignedEmployeeId: maya!.id,
       },
     });
     console.log(`  ✓ Research Specialist (Dr. Maya Patel) tasks: ${mayaTasks.length} (Excluded as research was not required)`);
@@ -762,7 +762,7 @@ process.exit(0);
     const mayaExecution = await prisma.taskExecution.create({
       data: {
         taskId: parentTask.id,
-        employeeId: maya.id,
+        employeeId: maya!.id,
         status: 'IN_PROGRESS',
       },
     });
@@ -770,12 +770,12 @@ process.exit(0);
     const mayaToolContext = {
       taskId: parentTask.id,
       taskExecutionId: mayaExecution.id,
-      employeeId: maya.id,
-      employeeName: `${maya.firstName} ${maya.lastName}`,
-      autonomyLevel: maya.agentConfig?.autonomyLevel as any,
+      employeeId: maya!.id,
+      employeeName: `${maya!.firstName} ${maya!.lastName}`,
+      autonomyLevel: maya!.agentConfig?.autonomyLevel as any,
       sandbox: new WorkspaceSandbox(projectWorkspace),
-      toolsEnabled: maya.agentConfig?.toolsEnabled as any,
-      permissionConfig: maya.agentConfig?.permissionConfig as any,
+      toolsEnabled: maya!.agentConfig?.toolsEnabled as any,
+      permissionConfig: maya!.agentConfig?.permissionConfig as any,
     };
     const mayaBuildAttempt = await toolRegistry.executeTool('run_build', {}, mayaToolContext);
     const mayaBuildBlocked = !mayaBuildAttempt.success;
@@ -828,7 +828,7 @@ process.exit(0);
     console.log('\n[E2E Validation Outcome]');
     console.log(`- Directive:               "${ceoTaskTitle}"`);
     console.log(`- Parent Task Final State: ${updatedParentTask?.status}`);
-    console.log(`- Total Subtasks:          ${updatedParentTask?.subtasks.length} (100% Completed)`);
+    console.log(`- Total Subtasks:          ${(updatedParentTask as any)?.subtasks?.length || 0} (100% Completed)`);
     console.log(`- Agent Messages Logged:   ${messages.length}`);
     console.log(`- Code Deliverables:       src/inventory.ts, test/inventory.test.js, architecture-spec.md`);
     console.log(`- All Verification Checks: PASSED\n`);

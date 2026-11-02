@@ -37,14 +37,35 @@ export const CharacterGLBModel: React.FC<CharacterGLBModelProps> = ({
   // 3. Clone scene to allow multiple independent character instances if needed
   const clonedScene = React.useMemo(() => {
     const clone = scene.clone(true);
+    const isAlex = employee.employeeCode === 'VAC-ENG-001' || asset.slug === 'alex-mercer';
+
     clone.traverse((child: any) => {
       if (child.isMesh) {
         child.castShadow = true;
         child.receiveShadow = true;
+
+        if (isAlex) {
+          // Runtime visual customization for Alex Mercer
+          if (child.name === 'vanguard_visor') {
+            child.material = new THREE.MeshStandardMaterial({
+              color: '#06b6d4',
+              emissive: '#0891b2',
+              emissiveIntensity: 0.4,
+              roughness: 0.2,
+              metalness: 0.8,
+            });
+          } else if (child.name === 'vanguard_Mesh') {
+            // Apply navy blue palette tint to match canonical tech hoodie
+            const mat = child.material.clone();
+            mat.color = new THREE.Color('#1e3a8a');
+            mat.roughness = 0.6;
+            child.material = mat;
+          }
+        }
       }
     });
     return clone;
-  }, [scene]);
+  }, [scene, employee, asset]);
 
   // 4. Handle Skeletal Clip Transitions
   useEffect(() => {
@@ -153,6 +174,33 @@ export const CharacterGLBModel: React.FC<CharacterGLBModelProps> = ({
     >
       {/* 3D Rigged Humanoid GLB Asset */}
       <primitive object={clonedScene} />
+
+      {/* Alex Mercer Specific Stylized Accessories (Headset & ID Badge) */}
+      {(employee.employeeCode === 'VAC-ENG-001' || asset.slug === 'alex-mercer') && (
+        <group position={[0, 0, 0]}>
+          {/* Audio Headset band & ear cups positioned on head */}
+          <group position={[0, 1.62, 0]}>
+            <mesh position={[0, 0.08, 0]} rotation={[Math.PI / 2, 0, 0]}>
+              <torusGeometry args={[0.12, 0.015, 8, 16, Math.PI]} />
+              <meshStandardMaterial color="#334155" metalness={0.9} />
+            </mesh>
+            <mesh position={[-0.12, 0.02, 0]} rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[0.035, 0.035, 0.03, 8]} />
+              <meshStandardMaterial color="#0284c7" />
+            </mesh>
+            <mesh position={[0.12, 0.02, 0]} rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[0.035, 0.035, 0.03, 8]} />
+              <meshStandardMaterial color="#0284c7" />
+            </mesh>
+          </group>
+
+          {/* VAC ID Card Badge on Torso */}
+          <mesh position={[0.08, 1.25, 0.14]} rotation={[0, 0, -0.05]}>
+            <boxGeometry args={[0.06, 0.08, 0.005]} />
+            <meshStandardMaterial color="#38bdf8" emissive="#0284c7" emissiveIntensity={0.2} />
+          </mesh>
+        </group>
+      )}
 
       {/* Floating Interactive HUD Tag */}
       <Html position={[0, 1.85, 0]} center distanceFactor={14}>

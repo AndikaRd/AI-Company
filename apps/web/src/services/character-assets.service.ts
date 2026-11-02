@@ -189,3 +189,4 @@ export class CharacterAssetsService {
     return Object.values(CHARACTER_ASSET_REGISTRY);
   }
 }
+
