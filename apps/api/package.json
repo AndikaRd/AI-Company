@@ -19,7 +19,8 @@
     "test": "jest",
     "test:security": "ts-node -r tsconfig-paths/register test/regression-security-audit.ts",
     "test:multiagent": "ts-node -r tsconfig-paths/register test/multi-agent-audit.ts",
-    "test:e2e-workflow": "ts-node -r tsconfig-paths/register test/e2e-multi-agent-workflow.ts"
+    "test:e2e-workflow": "ts-node -r tsconfig-paths/register test/e2e-multi-agent-workflow.ts",
+    "test:memory": "ts-node -r tsconfig-paths/register test/memory-system-audit.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",

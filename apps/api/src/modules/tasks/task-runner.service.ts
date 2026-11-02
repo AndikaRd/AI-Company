@@ -6,6 +6,7 @@ import {
   ForbiddenException,
   Inject,
   forwardRef,
+  Optional,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ToolRegistryService } from '../tools/tool-registry.service';
@@ -13,6 +14,8 @@ import { OllamaService } from '../ollama/ollama.service';
 import { WorkspaceSandbox } from '../tools/security/workspace-sandbox';
 import { ExecutionContext } from '../tools/interfaces/tool.interface';
 import { TaskOrchestratorService } from './task-orchestrator.service';
+import { MemoryRetrievalService } from '../memory/memory-retrieval.service';
+import { MemoryIngestionService } from '../memory/memory-ingestion.service';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import { existsSync } from 'fs';
@@ -28,6 +31,10 @@ export class TaskRunnerService {
     private readonly ollamaService: OllamaService,
     @Inject(forwardRef(() => TaskOrchestratorService))
     private readonly taskOrchestrator: TaskOrchestratorService,
+    @Optional()
+    private readonly memoryRetrieval?: MemoryRetrievalService,
+    @Optional()
+    private readonly memoryIngestion?: MemoryIngestionService,
   ) {}
 
   /**
@@ -166,13 +173,34 @@ export class TaskRunnerService {
       `  4. When your work is complete, provide a comprehensive final deliverable summary.\n` +
       `- Do not attempt to traverse outside the workspace (e.g. "../" is forbidden by sandbox security).`;
 
+    // 5. Retrieve authorized employee memory context
+    let memorySnippet = '';
+    let retrievedMemoryIds: string[] = [];
+    if (this.memoryRetrieval) {
+      try {
+        const memContext = await this.memoryRetrieval.retrieveContext({
+          employeeId: employee.id,
+          taskObjective: `${task.title}: ${task.description}`,
+          taskId: task.id,
+          projectId: task.parentTaskId || task.id,
+          maxTokens: 800,
+        });
+        if (memContext.promptSnippet) {
+          memorySnippet = `\n\n${memContext.promptSnippet}`;
+        }
+        retrievedMemoryIds = memContext.retrievedMemoryIds;
+      } catch (memErr: any) {
+        this.logger.debug(`Memory retrieval skipped for task [${taskId}]: ${memErr.message}`);
+      }
+    }
+
     const messages: Array<{
       role: 'system' | 'user' | 'assistant' | 'tool';
       content: string;
       tool_calls?: any[];
     }> = [
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: `Task Title: ${task.title}\n\nTask Objective:\n${task.description}` },
+      { role: 'user', content: `Task Title: ${task.title}\n\nTask Objective:\n${task.description}${memorySnippet}` },
     ];
 
     // Load available tools restricted to employee's enabled tools
@@ -323,6 +351,23 @@ export class TaskRunnerService {
             },
           },
         });
+
+        // Ingest task outcome as episodic memory for future retrieval
+        if (this.memoryIngestion) {
+          try {
+            await this.memoryIngestion.ingestTaskOutcome({
+              taskId: task.id,
+              employeeId: employee.id,
+              taskTitle: task.title,
+              taskDescription: task.description,
+              deliverablesSummary: finalSummary,
+              projectId: task.parentTaskId || task.id,
+            });
+            this.logger.log(`[Task ${taskId}] Ingested episodic memory for [${employee.firstName}].`);
+          } catch (memErr: any) {
+            this.logger.warn(`Failed to ingest episodic memory: ${memErr.message}`);
+          }
+        }
 
         // If this is a subtask with a delegator, emit TASK_COMPLETED message to delegator
         if (task.delegatedByEmployeeId) {

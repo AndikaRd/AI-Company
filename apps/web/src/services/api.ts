@@ -15,6 +15,13 @@ import {
   AgentMessage,
   DelegateTaskDto,
   RespondToDelegationDto,
+  Memory,
+  KnowledgeDocument,
+  KnowledgeCategory,
+  CreateMemoryDto,
+  QueryMemoryDto,
+  RetrievedMemoryItem,
+  MemoryAccessLog,
 } from '@vac/shared';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
@@ -224,6 +231,98 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify(dto),
     });
+  }
+
+  // --- Sprint 5: Company Intelligence & Memory System ---
+
+  async searchMemories(query: QueryMemoryDto): Promise<{ total: number; items: RetrievedMemoryItem[] }> {
+    const params = new URLSearchParams();
+    if (query.query) params.append('query', query.query);
+    if (query.employeeId) params.append('employeeId', query.employeeId);
+    if (query.category) params.append('category', query.category);
+    if (query.scope) params.append('scope', query.scope);
+    if (query.status) params.append('status', query.status);
+    if (query.limit) params.append('limit', String(query.limit));
+    if (query.offset) params.append('offset', String(query.offset));
+    return this.request(`/memory/search?${params.toString()}`);
+  }
+
+  async getEmployeeMemories(
+    employeeId: string,
+    params?: { category?: string; status?: string; limit?: number },
+  ): Promise<{
+    total: number;
+    working: Memory[];
+    episodic: Memory[];
+    semantic: Memory[];
+    all: Memory[];
+  }> {
+    const query = new URLSearchParams();
+    if (params?.category) query.append('category', params.category);
+    if (params?.status) query.append('status', params.status);
+    if (params?.limit) query.append('limit', String(params.limit));
+    return this.request(`/memory/employee/${employeeId}?${query.toString()}`);
+  }
+
+  async getMemoryById(id: string, requestingEmployeeId?: string): Promise<Memory> {
+    const query = requestingEmployeeId ? `?requestingEmployeeId=${requestingEmployeeId}` : '';
+    return this.request(`/memory/${id}${query}`);
+  }
+
+  async createMemory(dto: CreateMemoryDto): Promise<Memory> {
+    return this.request('/memory', {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    });
+  }
+
+  async updateMemory(id: string, dto: Partial<CreateMemoryDto>): Promise<Memory> {
+    return this.request(`/memory/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(dto),
+    });
+  }
+
+  async archiveMemory(id: string, reason?: string): Promise<Memory> {
+    return this.request(`/memory/${id}/archive`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  async deleteMemory(id: string, hard = false): Promise<{ success: boolean; message: string }> {
+    return this.request(`/memory/${id}?hard=${hard}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getKnowledgeDocuments(category?: KnowledgeCategory): Promise<KnowledgeDocument[]> {
+    const query = category ? `?category=${category}` : '';
+    return this.request(`/memory/knowledge/documents${query}`);
+  }
+
+  async getKnowledgeDocumentBySlug(slug: string): Promise<KnowledgeDocument> {
+    return this.request(`/memory/knowledge/documents/${slug}`);
+  }
+
+  async createKnowledgeDocument(dto: {
+    title: string;
+    slug: string;
+    category?: KnowledgeCategory;
+    content: string;
+    summary?: string;
+    authorEmployeeId?: string;
+    departmentId?: string;
+    tags?: string[];
+  }): Promise<KnowledgeDocument> {
+    return this.request('/memory/knowledge/documents', {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    });
+  }
+
+  async getMemoryAccessLogs(limit = 50): Promise<MemoryAccessLog[]> {
+    return this.request(`/memory/access-logs?limit=${limit}`);
   }
 }
 

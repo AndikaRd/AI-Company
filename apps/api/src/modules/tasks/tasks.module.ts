@@ -7,6 +7,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { ToolsModule } from '../tools/tools.module';
 import { OllamaModule } from '../ollama/ollama.module';
 import { AgentCommunicationModule } from '../agent-communication/agent-communication.module';
+import { MemoryModule } from '../memory/memory.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AgentCommunicationModule } from '../agent-communication/agent-communica
     ToolsModule,
     OllamaModule,
     forwardRef(() => AgentCommunicationModule),
+    MemoryModule,
   ],
   controllers: [TasksController],
   providers: [TasksService, TaskRunnerService, TaskOrchestratorService],

@@ -5,6 +5,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { EmployeesPage } from './pages/EmployeesPage';
 import { HierarchyPage } from './pages/HierarchyPage';
 import { TasksPage } from './pages/TasksPage';
+import { KnowledgeBasePage } from './pages/KnowledgeBasePage';
 import { SettingsPage } from './pages/SettingsPage';
 
 // Code-split 3D Virtual Office to isolate Three.js & R3F bundle chunk
@@ -36,6 +37,7 @@ export const App: React.FC = () => {
           <Route path="employees" element={<EmployeesPage />} />
           <Route path="hierarchy" element={<HierarchyPage />} />
           <Route path="tasks" element={<TasksPage />} />
+          <Route path="knowledge" element={<KnowledgeBasePage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

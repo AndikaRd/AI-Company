@@ -101,6 +101,45 @@ enum AgentMessageType {
   RESPONSE
 }
 
+enum MemoryCategory {
+  WORKING
+  EPISODIC
+  SEMANTIC
+}
+
+enum MemoryScope {
+  EMPLOYEE_PRIVATE
+  PROJECT_SHARED
+  COMPANY_SHARED
+  TASK_SCOPED
+}
+
+enum MemoryStatus {
+  ACTIVE
+  ARCHIVED
+  EXPIRED
+  DELETED
+}
+
+enum MemorySourceType {
+  TASK_EXECUTION
+  AGENT_DECISION
+  AGENT_COMMUNICATION
+  KNOWLEDGE_DOCUMENT
+  EXECUTIVE_DIRECTIVE
+  MANUAL_ENTRY
+}
+
+enum KnowledgeCategory {
+  CODING_STANDARDS
+  ARCHITECTURE_GUIDELINES
+  COMPANY_POLICY
+  PRODUCT_SPECIFICATION
+  SECURITY_PRACTICES
+  QA_VERIFICATION
+  GENERAL
+}
+
 model Company {
   id          String         @id @default(uuid())
   name        String
@@ -117,17 +156,19 @@ model Company {
 }
 
 model Department {
-  id          String     @id @default(uuid())
-  name        String
-  slug        String
-  description String?
-  floorZone   String?    @map("floor_zone")
-  color       String?
-  companyId   String     @map("company_id")
-  company     Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  employees   Employee[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id            String              @id @default(uuid())
+  name          String
+  slug          String
+  description   String?
+  floorZone     String?             @map("floor_zone")
+  color         String?
+  companyId     String              @map("company_id")
+  company       Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employees     Employee[]
+  memories      Memory[]            @relation("DepartmentMemories")
+  knowledgeDocs KnowledgeDocument[] @relation("DepartmentKnowledgeDocs")
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
 
   @@unique([companyId, slug])
   @@index([companyId])
@@ -135,35 +176,38 @@ model Department {
 }
 
 model Employee {
-  id               String              @id @default(uuid())
-  employeeCode     String?             @unique @map("employee_code")
-  firstName        String              @map("first_name")
-  lastName         String              @map("last_name")
-  role             String
-  jobTitle         String?             @map("job_title")
-  seniority        SeniorityLevel      @default(MID)
-  personality      String?             @db.Text
-  primaryExpertise String?             @map("primary_expertise")
-  skills           Json?
-  responsibilities Json?
-  email            String              @unique
-  avatarUrl        String?             @map("avatar_url")
-  workstationId    String?             @map("workstation_id")
-  isAiAgent        Boolean             @default(true) @map("is_ai_agent")
-  status           EmployeeStatus      @default(ACTIVE)
-  departmentId     String              @map("department_id")
-  department       Department          @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  supervisorId     String?             @map("supervisor_id")
-  supervisor       Employee?           @relation("EmployeeSupervisor", fields: [supervisorId], references: [id], onDelete: SetNull)
-  subordinates     Employee[]          @relation("EmployeeSupervisor")
-  agentConfig      AgentConfiguration?
-  conversations    Conversation[]
-  tasks            Task[]              @relation("AssignedTasks")
-  delegatedTasks   Task[]              @relation("DelegatedTasks")
-  sentMessages     AgentMessage[]      @relation("SentAgentMessages")
-  receivedMessages AgentMessage[]      @relation("ReceivedAgentMessages")
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
+  id                String              @id @default(uuid())
+  employeeCode      String?             @unique @map("employee_code")
+  firstName         String              @map("first_name")
+  lastName          String              @map("last_name")
+  role              String
+  jobTitle          String?             @map("job_title")
+  seniority         SeniorityLevel      @default(MID)
+  personality       String?             @db.Text
+  primaryExpertise  String?             @map("primary_expertise")
+  skills            Json?
+  responsibilities  Json?
+  email             String              @unique
+  avatarUrl         String?             @map("avatar_url")
+  workstationId     String?             @map("workstation_id")
+  isAiAgent         Boolean             @default(true) @map("is_ai_agent")
+  status            EmployeeStatus      @default(ACTIVE)
+  departmentId      String              @map("department_id")
+  department        Department          @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  supervisorId      String?             @map("supervisor_id")
+  supervisor        Employee?           @relation("EmployeeSupervisor", fields: [supervisorId], references: [id], onDelete: SetNull)
+  subordinates      Employee[]          @relation("EmployeeSupervisor")
+  agentConfig       AgentConfiguration?
+  conversations     Conversation[]
+  tasks             Task[]              @relation("AssignedTasks")
+  delegatedTasks    Task[]              @relation("DelegatedTasks")
+  sentMessages      AgentMessage[]      @relation("SentAgentMessages")
+  receivedMessages  AgentMessage[]      @relation("ReceivedAgentMessages")
+  memories          Memory[]            @relation("EmployeeMemories")
+  authoredKnowledge KnowledgeDocument[] @relation("AuthoredKnowledgeDocs")
+  memoryAccessLogs  MemoryAccessLog[]   @relation("AccessedMemories")
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
 
   @@index([departmentId])
   @@index([status])
@@ -240,6 +284,7 @@ model Task {
   executions            TaskExecution[]
   approvalRequests      ApprovalRequest[]
   agentMessages         AgentMessage[]
+  memories              Memory[]          @relation("TaskMemories")
   createdAt             DateTime          @default(now()) @map("created_at")
   updatedAt             DateTime          @updatedAt @map("updated_at")
 
@@ -329,4 +374,119 @@ model AgentMessage {
   @@index([taskId])
   @@index([correlationId])
   @@map("agent_messages")
+}
+
+model Memory {
+  id              String            @id @default(uuid())
+  category        MemoryCategory
+  scope           MemoryScope
+  status          MemoryStatus      @default(ACTIVE)
+  title           String
+  content         String            @db.Text
+  summary         String?           @db.Text
+  tags            Json?
+  ownerEmployeeId String?           @map("owner_employee_id")
+  ownerEmployee   Employee?         @relation("EmployeeMemories", fields: [ownerEmployeeId], references: [id], onDelete: SetNull)
+  departmentId    String?           @map("department_id")
+  department      Department?       @relation("DepartmentMemories", fields: [departmentId], references: [id], onDelete: SetNull)
+  projectId       String?           @map("project_id")
+  taskId          String?           @map("task_id")
+  task            Task?             @relation("TaskMemories", fields: [taskId], references: [id], onDelete: SetNull)
+  importance      Float             @default(0.5)
+  confidence      Float             @default(1.0)
+  accessCount     Int               @default(0) @map("access_count")
+  lastAccessedAt  DateTime?         @map("last_accessed_at")
+  expiresAt       DateTime?         @map("expires_at")
+  metadata        Json?
+  embedding       Json?
+  sourceId        String?           @unique @map("source_id")
+  source          MemorySource?     @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  accessLogs      MemoryAccessLog[]
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  @@index([ownerEmployeeId])
+  @@index([category])
+  @@index([scope])
+  @@index([status])
+  @@index([taskId])
+  @@index([projectId])
+  @@index([departmentId])
+  @@map("memories")
+}
+
+model MemorySource {
+  id              String           @id @default(uuid())
+  sourceType      MemorySourceType @map("source_type")
+  sourceRef       String?          @map("source_ref")
+  isVerified      Boolean          @default(false) @map("is_verified")
+  verifiedBy      String?          @map("verified_by")
+  verifiedAt      DateTime?        @map("verified_at")
+  confidenceScore Float            @default(0.8) @map("confidence_score")
+  rawContent      String?          @map("raw_content") @db.Text
+  memory          Memory?
+  createdAt       DateTime         @default(now()) @map("created_at")
+
+  @@index([sourceType])
+  @@index([isVerified])
+  @@map("memory_sources")
+}
+
+model KnowledgeDocument {
+  id               String            @id @default(uuid())
+  title            String
+  slug             String            @unique
+  category         KnowledgeCategory @default(GENERAL)
+  content          String            @db.Text
+  summary          String?           @db.Text
+  authorEmployeeId String?           @map("author_employee_id")
+  authorEmployee   Employee?         @relation("AuthoredKnowledgeDocs", fields: [authorEmployeeId], references: [id], onDelete: SetNull)
+  departmentId     String?           @map("department_id")
+  department       Department?       @relation("DepartmentKnowledgeDocs", fields: [departmentId], references: [id], onDelete: SetNull)
+  version          Int               @default(1)
+  isApproved       Boolean           @default(true) @map("is_approved")
+  approvedBy       String?           @map("approved_by")
+  approvedAt       DateTime?         @map("approved_at")
+  tags             Json?
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@index([departmentId])
+  @@index([isApproved])
+  @@map("knowledge_documents")
+}
+
+model ProjectKnowledge {
+  id                  String   @id @default(uuid())
+  projectId           String   @map("project_id")
+  title               String
+  key                 String
+  value               String   @db.Text
+  isVerified          Boolean  @default(true) @map("is_verified")
+  updatedByEmployeeId String?  @map("updated_by_employee_id")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@unique([projectId, key])
+  @@index([projectId])
+  @@map("project_knowledge")
+}
+
+model MemoryAccessLog {
+  id                   String    @id @default(uuid())
+  memoryId             String    @map("memory_id")
+  memory               Memory    @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+  accessedByEmployeeId String    @map("accessed_by_employee_id")
+  accessedByEmployee   Employee  @relation("AccessedMemories", fields: [accessedByEmployeeId], references: [id], onDelete: Cascade)
+  taskId               String?   @map("task_id")
+  action               String
+  queryContext         String?   @map("query_context") @db.Text
+  relevanceScore       Float?    @map("relevance_score")
+  createdAt            DateTime  @default(now()) @map("created_at")
+
+  @@index([memoryId])
+  @@index([accessedByEmployeeId])
+  @@index([taskId])
+  @@map("memory_access_logs")
 }

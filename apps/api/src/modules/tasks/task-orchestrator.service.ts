@@ -6,10 +6,12 @@ import {
   ForbiddenException,
   Inject,
   forwardRef,
+  Optional,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { OllamaService } from '../ollama/ollama.service';
 import { AgentCommunicationService } from '../agent-communication/agent-communication.service';
+import { MemoryRetrievalService } from '../memory/memory-retrieval.service';
 import { DecomposeTaskDto, TaskDecompositionPlanDto, SubtaskDefinitionDto } from '@vac/shared';
 
 @Injectable()
@@ -21,6 +23,8 @@ export class TaskOrchestratorService {
     private readonly ollamaService: OllamaService,
     @Inject(forwardRef(() => AgentCommunicationService))
     private readonly agentComms: AgentCommunicationService,
+    @Optional()
+    private readonly memoryRetrieval?: MemoryRetrievalService,
   ) {}
 
   /**
@@ -68,7 +72,25 @@ export class TaskOrchestratorService {
       include: { department: true },
     });
 
-    // 1. Generate Structured Decomposition Plan
+    // 1. Retrieve authorized corporate knowledge for coordinator
+    let memorySnippet = '';
+    if (this.memoryRetrieval) {
+      try {
+        const memContext = await this.memoryRetrieval.retrieveContext({
+          employeeId: coordinator.id,
+          taskObjective: `${parentTask.title} ${parentTask.description}`,
+          projectId: parentTask.id,
+          maxTokens: 500,
+        });
+        if (memContext.promptSnippet) {
+          memorySnippet = `\n${memContext.promptSnippet}\n`;
+        }
+      } catch (memErr: any) {
+        this.logger.debug(`Memory retrieval skipped for coordinator: ${memErr.message}`);
+      }
+    }
+
+    // 2. Generate Structured Decomposition Plan
     let subtaskDefs: SubtaskDefinitionDto[] = [];
     let rationale = '';
 
@@ -82,6 +104,7 @@ export class TaskOrchestratorService {
         `DIRECTIVE TITLE: ${parentTask.title}\n` +
         `DIRECTIVE OBJECTIVE: ${parentTask.description}\n` +
         (dto.guidelines ? `COORDINATION GUIDELINES: ${dto.guidelines}\n` : '') +
+        memorySnippet +
         `\nAVAILABLE TEAM MEMBERS:\n` +
         employees
           .map((e) => `- ${e.firstName} ${e.lastName} [${e.employeeCode}] (${e.jobTitle || e.role}, Dept: ${e.department.name}, Skills: ${((e.skills as any) || []).join(', ')})`)

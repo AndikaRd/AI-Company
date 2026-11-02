@@ -11,6 +11,7 @@ import { OllamaModule } from './modules/ollama/ollama.module';
 import { ToolsModule } from './modules/tools/tools.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { AgentCommunicationModule } from './modules/agent-communication/agent-communication.module';
+import { MemoryModule } from './modules/memory/memory.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AgentCommunicationModule } from './modules/agent-communication/agent-co
     ToolsModule,
     TasksModule,
     AgentCommunicationModule,
+    MemoryModule,
   ],
 })
 export class AppModule {}

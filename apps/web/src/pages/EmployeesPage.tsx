@@ -17,6 +17,8 @@ import { useCompanyStore } from '../store/useCompanyStore';
 import { api } from '../services/api';
 import { AgentChatDrawer } from '../components/chat/AgentChatDrawer';
 import { ProvisionEmployeeModal } from '../components/employees/ProvisionEmployeeModal';
+import { EmployeeMemoryDrawer } from '../components/employees/EmployeeMemoryDrawer';
+import { Brain } from 'lucide-react';
 
 export const EmployeesPage: React.FC = () => {
   const { departments, fetchData } = useCompanyStore();
@@ -28,6 +30,7 @@ export const EmployeesPage: React.FC = () => {
   // Modal & Drawer State
   const [isProvisionOpen, setIsProvisionOpen] = useState(false);
   const [activeChatEmployee, setActiveChatEmployee] = useState<Employee | null>(null);
+  const [activeMemoryEmployee, setActiveMemoryEmployee] = useState<Employee | null>(null);
 
   const loadEmployees = async () => {
     setIsLoading(true);
@@ -271,14 +274,22 @@ export const EmployeesPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* Card Action Button */}
-                <div className="mt-5 pt-4 border-t border-surface-border">
+                {/* Card Action Buttons */}
+                <div className="mt-5 pt-4 border-t border-surface-border grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setActiveChatEmployee(emp)}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-bold transition-all shadow-glow-cyan"
+                    className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-bold transition-all shadow-glow-cyan"
                   >
-                    <MessageSquare className="w-4 h-4" />
-                    <span>Chat with {emp.firstName}</span>
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>Chat</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveMemoryEmployee(emp)}
+                    className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 text-xs font-semibold transition-all"
+                  >
+                    <Brain className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Memory</span>
                   </button>
                 </div>
               </Card>
@@ -303,6 +314,13 @@ export const EmployeesPage: React.FC = () => {
         employee={activeChatEmployee}
         isOpen={Boolean(activeChatEmployee)}
         onClose={() => setActiveChatEmployee(null)}
+      />
+
+      {/* Sprint 5: Employee Memory Drawer */}
+      <EmployeeMemoryDrawer
+        employee={activeMemoryEmployee}
+        isOpen={Boolean(activeMemoryEmployee)}
+        onClose={() => setActiveMemoryEmployee(null)}
       />
     </div>
   );
