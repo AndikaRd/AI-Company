@@ -8,10 +8,12 @@ export interface ExecutionContext {
   employeeName: string;
   autonomyLevel: string;
   sandbox: WorkspaceSandbox;
+  toolsEnabled?: string[];
   permissionConfig?: {
     allowNetworkFetch?: boolean;
     allowFileSystemWrite?: boolean;
     requireApprovalForExecution?: boolean;
+    allowCommandExecution?: boolean;
   };
 }
 

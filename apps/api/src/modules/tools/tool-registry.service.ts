@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { BackendToolDefinition, ExecutionContext } from './interfaces/tool.interface';
 import { ToolExecutionResult, ToolDefinitionDto } from '@vac/shared';
+import { LogSanitizer } from './security/log-sanitizer';
 import {
   listFilesTool,
   readFileTool,
@@ -108,40 +109,117 @@ export class ToolRegistryService implements OnModuleInit {
   }
 
   /**
-   * Server-side permission check against employee runtime configuration
+   * Server-side permission check against employee runtime configuration & autonomy level.
+   * Defines explicit behavior for:
+   * - MANUAL
+   * - SUPERVISED
+   * - AUTONOMOUS
    */
   checkPermission(tool: BackendToolDefinition, context: ExecutionContext): PermissionCheckResult {
-    // Critical tools ALWAYS require approval
-    if (tool.riskLevel === 'CRITICAL' || tool.requiresApproval) {
-      return {
-        allowed: true,
-        requiresApproval: true,
-        reason: `Tool '${tool.name}' has risk level '${tool.riskLevel}' and requires explicit approval.`,
-      };
+    // 1. Check if tool is explicitly granted in employee's toolsEnabled
+    if (context.toolsEnabled && Array.isArray(context.toolsEnabled)) {
+      if (!context.toolsEnabled.includes(tool.name)) {
+        return {
+          allowed: false,
+          requiresApproval: false,
+          reason: `Unauthorized tool execution: Tool '${tool.name}' is not in employee's granted tools list.`,
+        };
+      }
     }
 
     const perms = context.permissionConfig;
 
-    // Check write permissions
+    // 2. Permanently Prohibited Actions via Permission Policies
     if (['create_file', 'edit_file', 'write_file'].includes(tool.name)) {
       if (perms?.allowFileSystemWrite === false) {
         return {
           allowed: false,
           requiresApproval: false,
-          reason: `Agent permissions explicitly forbid file system write operations.`,
+          reason: `Permanently prohibited: Agent permissions explicitly forbid file system write operations.`,
         };
       }
     }
 
-    // Check supervised autonomy setting
-    if (context.autonomyLevel === 'SUPERVISED' && perms?.requireApprovalForExecution) {
-      if (['MEDIUM', 'HIGH'].includes(tool.riskLevel)) {
+    if (['run_build', 'run_tests'].includes(tool.name)) {
+      if (perms?.allowCommandExecution === false) {
+        return {
+          allowed: false,
+          requiresApproval: false,
+          reason: `Permanently prohibited: Agent permissions explicitly forbid command execution operations.`,
+        };
+      }
+    }
+
+    // 3. CRITICAL Risk Level Tools: Permanently require explicit CEO approval across ALL autonomy levels
+    if (tool.riskLevel === 'CRITICAL') {
+      return {
+        allowed: true,
+        requiresApproval: true,
+        reason: `Tool '${tool.name}' has CRITICAL risk level and permanently requires explicit CEO approval.`,
+      };
+    }
+
+    // 4. MANUAL Autonomy Level:
+    // Read-only tools allowed with logging. ALL mutating or execution tools require human approval.
+    if (context.autonomyLevel === 'MANUAL') {
+      if (tool.riskLevel === 'READ_ONLY') {
+        return { allowed: true, requiresApproval: false };
+      }
+      return {
+        allowed: true,
+        requiresApproval: true,
+        reason: `Employee has MANUAL autonomy. Human approval required for all mutating and execution operations ('${tool.name}').`,
+      };
+    }
+
+    // 5. SUPERVISED Autonomy Level (Default):
+    // Read-only tools allowed. Low risk allowed unless strict approval configured.
+    // Medium risk allowed unless strict approval configured. High risk always requires approval.
+    if (context.autonomyLevel === 'SUPERVISED') {
+      if (tool.riskLevel === 'READ_ONLY') {
+        return { allowed: true, requiresApproval: false };
+      }
+
+      if (tool.riskLevel === 'HIGH' || tool.requiresApproval) {
         return {
           allowed: true,
           requiresApproval: true,
-          reason: `Employee is configured with SUPERVISED autonomy and requires approval for '${tool.name}'.`,
+          reason: `Tool '${tool.name}' has risk level '${tool.riskLevel}' and requires supervisor approval under SUPERVISED autonomy.`,
         };
       }
+
+      if (['LOW', 'MEDIUM'].includes(tool.riskLevel) && perms?.requireApprovalForExecution) {
+        return {
+          allowed: true,
+          requiresApproval: true,
+          reason: `Employee configured with strict approval required for '${tool.name}'.`,
+        };
+      }
+
+      return { allowed: true, requiresApproval: false };
+    }
+
+    // 6. AUTONOMOUS Autonomy Level:
+    // Read-only, Low, and Medium risk tools are automatically allowed with logging.
+    // High risk tools require approval if marked requiresApproval.
+    if (context.autonomyLevel === 'AUTONOMOUS') {
+      if (tool.riskLevel === 'HIGH' && tool.requiresApproval) {
+        return {
+          allowed: true,
+          requiresApproval: true,
+          reason: `Tool '${tool.name}' requires explicit approval before remote operations.`,
+        };
+      }
+      return { allowed: true, requiresApproval: false };
+    }
+
+    // Fallback if tool explicitly mandates approval
+    if (tool.requiresApproval) {
+      return {
+        allowed: true,
+        requiresApproval: true,
+        reason: `Tool '${tool.name}' requires explicit approval.`,
+      };
     }
 
     return {
@@ -151,7 +229,7 @@ export class ToolRegistryService implements OnModuleInit {
   }
 
   /**
-   * Securely executes a tool with input schema validation, permission checks, and database audit logging
+   * Securely executes a tool with input schema validation, permission checks, and sanitized database audit logging
    */
   async executeTool(
     name: string,
@@ -167,15 +245,36 @@ export class ToolRegistryService implements OnModuleInit {
       };
     }
 
+    // Input schema validation
+    const validationError = this.validateInputSchema(tool, input);
+    if (validationError) {
+      await this.logExecution(
+        context.taskExecutionId,
+        name,
+        input,
+        { success: false, error: validationError },
+        'FAILURE',
+        tool.riskLevel,
+      );
+      return {
+        success: false,
+        error: validationError,
+      };
+    }
+
     // Check permissions
     const permission = this.checkPermission(tool, context);
 
     if (!permission.allowed) {
       // Log blocked execution
-      await this.logExecution(context.taskExecutionId, name, input, {
-        success: false,
-        error: permission.reason,
-      }, 'BLOCKED', tool.riskLevel);
+      await this.logExecution(
+        context.taskExecutionId,
+        name,
+        input,
+        { success: false, error: permission.reason },
+        'BLOCKED',
+        tool.riskLevel,
+      );
 
       return {
         success: false,
@@ -190,8 +289,8 @@ export class ToolRegistryService implements OnModuleInit {
           taskId: context.taskId,
           taskExecutionId: context.taskExecutionId,
           toolName: name,
-          actionSummary: `Execute tool '${name}' with parameters: ${JSON.stringify(input)}`,
-          input: input || {},
+          actionSummary: `Execute tool '${name}' with parameters: ${JSON.stringify(LogSanitizer.sanitize(input))}`,
+          input: (LogSanitizer.sanitize(input) as any) || {},
           riskLevel: tool.riskLevel,
           status: 'PENDING',
         },
@@ -204,10 +303,17 @@ export class ToolRegistryService implements OnModuleInit {
       });
 
       // Log execution state
-      await this.logExecution(context.taskExecutionId, name, input, {
-        success: false,
-        error: `Action requires human approval. Approval Request ID: ${approval.id}`,
-      }, 'APPROVAL_REQUIRED', tool.riskLevel);
+      await this.logExecution(
+        context.taskExecutionId,
+        name,
+        input,
+        {
+          success: false,
+          error: `Action requires human approval. Approval Request ID: ${approval.id}`,
+        },
+        'APPROVAL_REQUIRED',
+        tool.riskLevel,
+      );
 
       return {
         success: false,
@@ -257,6 +363,26 @@ export class ToolRegistryService implements OnModuleInit {
     }
   }
 
+  /**
+   * Validates required parameters against tool parameters schema
+   */
+  private validateInputSchema(tool: BackendToolDefinition, input: any): string | null {
+    if (!input || typeof input !== 'object') {
+      return `Validation error: Expected JSON object arguments for tool '${tool.name}'.`;
+    }
+
+    const requiredProps = tool.parameters?.required;
+    if (Array.isArray(requiredProps)) {
+      for (const prop of requiredProps) {
+        if (input[prop] === undefined || input[prop] === null || input[prop] === '') {
+          return `Validation error: Missing required property '${prop}' for tool '${tool.name}'.`;
+        }
+      }
+    }
+
+    return null;
+  }
+
   private async logExecution(
     taskExecutionId: string,
     toolName: string,
@@ -269,17 +395,20 @@ export class ToolRegistryService implements OnModuleInit {
   ) {
     try {
       if (taskExecutionId) {
+        const sanitizedInput = LogSanitizer.sanitize(input || {});
+        const sanitizedOutput = LogSanitizer.sanitize(output || {});
+
         await this.prisma.toolExecutionLog.create({
           data: {
             taskExecutionId,
             toolName,
-            input: input || {},
-            output: output || {},
+            input: sanitizedInput,
+            output: sanitizedOutput,
             status,
             riskLevel,
             durationMs,
             exitCode,
-            error: output?.error || null,
+            error: output?.error ? LogSanitizer.sanitizeString(String(output.error)) : null,
           },
         });
       }

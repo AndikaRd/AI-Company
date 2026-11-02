@@ -16,7 +16,8 @@
     "prisma:seed": "ts-node -r tsconfig-paths/register prisma/seed.ts",
     "prisma:studio": "prisma studio",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
-    "test": "jest"
+    "test": "jest",
+    "test:security": "ts-node -r tsconfig-paths/register test/regression-security-audit.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",

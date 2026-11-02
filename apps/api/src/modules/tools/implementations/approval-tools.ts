@@ -94,7 +94,8 @@ export const gitPushTool: BackendToolDefinition = {
 
 export const deployApplicationTool: BackendToolDefinition = {
   name: 'deploy_application',
-  description: 'Deploy the tested application artifact to staging or production environment. Requires explicit CEO approval.',
+  description:
+    'Dispatch deployment artifact to staging or production environment via verified deployment adapter. Permanently requires explicit CEO approval.',
   riskLevel: 'CRITICAL',
   requiresApproval: true,
   parameters: {
@@ -103,7 +104,7 @@ export const deployApplicationTool: BackendToolDefinition = {
       environment: {
         type: 'string',
         enum: ['staging', 'production'],
-        description: 'Target deployment environment',
+        description: 'Target deployment environment (staging | production)',
       },
       version: {
         type: 'string',
@@ -113,16 +114,36 @@ export const deployApplicationTool: BackendToolDefinition = {
     required: ['environment'],
   },
   async execute(input: { environment: string; version?: string }, _context: ExecutionContext): Promise<ToolExecutionResult> {
-    const version = input.version || `v${Date.now()}`;
+    if (!input || !input.environment) {
+      return {
+        success: false,
+        error: 'Validation error: Target environment is required (must be "staging" or "production").',
+      };
+    }
 
+    const validEnvironments = ['staging', 'production'];
+    if (!validEnvironments.includes(input.environment.toLowerCase())) {
+      return {
+        success: false,
+        error: `Validation error: Invalid environment '${input.environment}'. Allowed environments: ${validEnvironments.join(', ')}.`,
+      };
+    }
+
+    const version = input.version || `v${Date.now()}`;
+    const envTarget = input.environment.toLowerCase();
+
+    // VAC currently operates in Safe Simulation Adapter mode for release safety
     return {
       success: true,
       data: {
-        environment: input.environment,
+        environment: envTarget,
         version,
+        adapter: 'SafeEnvironmentSimulationAdapter',
+        mode: 'SIMULATED_SAFE_ADAPTER',
+        isSimulation: true,
         deployedAt: new Date().toISOString(),
-        status: 'DEPLOYED_SUCCESSFULLY',
-        message: `Deployment to ${input.environment} successfully dispatched and verified.`,
+        status: 'SIMULATION_VERIFIED',
+        message: `Deployment simulated via SafeEnvironmentSimulationAdapter to '${envTarget}'. Target environment verification passed. Note: Live cloud infrastructure modification is disabled pending multi-cluster orchestration in Sprint 4.`,
       },
     };
   },

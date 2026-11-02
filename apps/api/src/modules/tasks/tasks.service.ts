@@ -1,15 +1,73 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TaskRunnerService } from './task-runner.service';
 import { CreateTaskDto, ReviewApprovalDto } from './dto/task.dto';
 import { TaskStatus } from '@prisma/client';
 
 @Injectable()
-export class TasksService {
+export class TasksService implements OnModuleInit {
+  private readonly logger = new Logger(TasksService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly taskRunner: TaskRunnerService,
   ) {}
+
+  async onModuleInit() {
+    await this.recoverStaleTasks();
+  }
+
+  /**
+   * Stale Task Recovery Handler:
+   * Detects tasks left in IN_PROGRESS after backend crash or restart,
+   * transitioning them to REVIEW status with descriptive metadata.
+   */
+  async recoverStaleTasks(): Promise<number> {
+    try {
+      const staleTasks = await this.prisma.task.findMany({
+        where: { status: 'IN_PROGRESS' },
+        include: { executions: { where: { status: 'IN_PROGRESS' } } },
+      });
+
+      if (staleTasks.length > 0) {
+        this.logger.warn(`Recovering ${staleTasks.length} interrupted in-progress tasks after server restart.`);
+
+        for (const task of staleTasks) {
+          // Transition task to REVIEW
+          await this.prisma.task.update({
+            where: { id: task.id },
+            data: {
+              status: 'REVIEW',
+              deliverables: {
+                interrupted: true,
+                recoveryReason: 'Execution was interrupted by a server restart or crash. Ready for supervisor retry.',
+                interruptedAt: new Date().toISOString(),
+              },
+            },
+          });
+
+          // Transition any open executions to REVIEW
+          for (const exec of task.executions) {
+            await this.prisma.taskExecution.update({
+              where: { id: exec.id },
+              data: {
+                status: 'REVIEW',
+                summary: 'Execution was interrupted by server shutdown. Ready for resume.',
+                completedAt: new Date(),
+              },
+            });
+          }
+        }
+
+        this.logger.log(`Successfully recovered ${staleTasks.length} stale tasks.`);
+      }
+
+      return staleTasks.length;
+    } catch (err: any) {
+      this.logger.error(`Failed to execute stale task recovery: ${err.message}`);
+      return 0;
+    }
+  }
 
   async createTask(dto: CreateTaskDto) {
     const employee = await this.prisma.employee.findUnique({
