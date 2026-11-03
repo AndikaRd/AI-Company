@@ -67,7 +67,7 @@ export class TaskRunnerService {
       where: { id: taskId },
       include: {
         assignedEmployee: {
-          include: { agentConfig: true },
+          include: { agentConfig: true, department: true },
         },
       },
     });
@@ -426,6 +426,79 @@ export class TaskRunnerService {
           } catch (memErr: any) {
             this.logger.warn(`Failed to ingest episodic memory: ${memErr.message}`);
           }
+        }
+
+        // Check if this task was spawned by an Executive CEO Command
+        try {
+          const ceoCommand = await (this.prisma as any).ceoCommand.findFirst({
+            where: { createdTaskId: task.id },
+          });
+          if (ceoCommand) {
+            await (this.prisma as any).ceoCommand.update({
+              where: { id: ceoCommand.id },
+              data: {
+                status: 'COMPLETED',
+                response: finalSummary,
+              },
+            });
+            this.logger.log(`[Task ${taskId}] Updated CeoCommand [${ceoCommand.id}] with substantive AI deliverable.`);
+
+            // Persist report delivery message from employee to CEO
+            try {
+              await this.prisma.agentMessage.create({
+                data: {
+                  senderEmployeeId: employee.id,
+                  recipientEmployeeId: employee.id,
+                  taskId: task.id,
+                  correlationId: ceoCommand.id,
+                  messageType: 'TASK_COMPLETED',
+                  content: `Technical deliverable submitted to CEO regarding "${task.title}". Summary: ${finalSummary.slice(0, 300)}...`,
+                  payload: {
+                    reportSummary: finalSummary,
+                    completedAt: new Date().toISOString(),
+                    ceoCommandId: ceoCommand.id,
+                  },
+                },
+              });
+            } catch (msgErr: any) {
+              this.logger.debug(`Could not create report message: ${msgErr.message}`);
+            }
+
+            if (this.eventsGateway) {
+              this.eventsGateway.broadcastOfficeEvent(SocketEvents.COMPANY_FEED_ITEM_ADDED, {
+                feedItem: {
+                  id: `ceo-complete-${ceoCommand.id}`,
+                  category: 'TASKS',
+                  title: `${employee.firstName} ${employee.lastName} completed CEO Directive`,
+                  description: finalSummary.slice(0, 350) + (finalSummary.length > 350 ? '...' : ''),
+                  timestamp: new Date().toISOString(),
+                  author: {
+                    id: employee.id,
+                    name: `${employee.firstName} ${employee.lastName}`,
+                    role: employee.role,
+                    employeeCode: employee.employeeCode,
+                    departmentName: employee.department?.name,
+                  },
+                  target: {
+                    id: 'ceo-user',
+                    name: 'Chief Executive Officer',
+                    type: 'COMPANY',
+                  },
+                  status: 'COMPLETED',
+                  entityType: 'task',
+                  entityId: task.id,
+                },
+              });
+              this.eventsGateway.broadcastOfficeEvent(SocketEvents.CEO_INSTRUCTION_UPDATED, {
+                commandId: ceoCommand.id,
+                status: 'COMPLETED',
+                response: finalSummary,
+                completedTaskId: task.id,
+              });
+            }
+          }
+        } catch (ceoErr: any) {
+          this.logger.warn(`Failed to update CeoCommand outcome: ${ceoErr.message}`);
         }
 
         // If this is a subtask with a delegator, emit TASK_COMPLETED message to delegator

@@ -6,70 +6,69 @@ export const OfficeLighting: React.FC = () => {
 
   const lightConfigs = {
     daylight: {
-      ambient: '#94a3b8',
-      ambientIntensity: 0.6,
-      main: '#f8fafc',
-      mainIntensity: 1.2,
-      accent: '#38bdf8',
-    },
-    cyberpunk: {
-      ambient: '#1e1b4b',
-      ambientIntensity: 0.4,
-      main: '#06b6d4',
-      mainIntensity: 1.0,
-      accent: '#ec4899',
+      ambient: '#FFF8EE',
+      ambientIntensity: 1.05,
+      sunlight: '#FFF7EB',
+      sunIntensity: 1.45,
+      bounce: '#F4EBDD',
+      bounceIntensity: 0.55,
     },
     warm: {
-      ambient: '#78716c',
-      ambientIntensity: 0.5,
-      main: '#fed7aa',
-      mainIntensity: 1.1,
-      accent: '#f59e0b',
+      ambient: '#FFF3E2',
+      ambientIntensity: 1.15,
+      sunlight: '#FFE4C4',
+      sunIntensity: 1.35,
+      bounce: '#F4EBDD',
+      bounceIntensity: 0.6,
+    },
+    soft: {
+      ambient: '#FBF7F0',
+      ambientIntensity: 1.1,
+      sunlight: '#FFF9F2',
+      sunIntensity: 1.3,
+      bounce: '#E5E1D8',
+      bounceIntensity: 0.5,
     },
   };
 
-  const current = lightConfigs[lightingMode] || lightConfigs.daylight;
+  const current = (lightConfigs as any)[lightingMode] || lightConfigs.daylight;
 
   return (
     <group>
-      {/* Base Ambient Light */}
+      {/* Soft, Warm Ambient Fill Light across entire floor */}
       <ambientLight color={current.ambient} intensity={current.ambientIntensity} />
 
-      {/* Main Directional Sunlight / Office Overhead Cast Light */}
+      {/* Main Directional Natural Sunlight streaming through architectural windows */}
       <directionalLight
-        position={[20, 30, 20]}
-        intensity={current.mainIntensity}
-        color={current.main}
+        position={[22, 34, 18]}
+        intensity={current.sunIntensity}
+        color={current.sunlight}
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
         shadow-camera-near={0.5}
-        shadow-camera-far={80}
-        shadow-camera-left={-22}
-        shadow-camera-right={22}
-        shadow-camera-top={22}
-        shadow-camera-bottom={-22}
-        shadow-bias={-0.0005}
+        shadow-camera-far={90}
+        shadow-camera-left={-24}
+        shadow-camera-right={24}
+        shadow-camera-top={24}
+        shadow-camera-bottom={-24}
+        shadow-bias={-0.0002}
+        shadow-normalBias={0.02}
       />
 
-      {/* Fill Light (Soft cool shadow fill) */}
+      {/* Warm Fill / Bounce Light (eliminates harsh dark shadows underneath desks) */}
       <directionalLight
-        position={[-15, 20, -15]}
-        intensity={0.35}
-        color="#38bdf8"
+        position={[-18, 22, -18]}
+        intensity={current.bounceIntensity}
+        color={current.bounce}
       />
 
-      {/* Central Node Overhead Downlight */}
-      <spotLight
-        position={[0, 10, 0]}
-        target-position={[0, 0, 0]}
-        intensity={1.8}
-        color={current.accent}
-        angle={Math.PI / 4}
-        penumbra={0.6}
-        distance={20}
-      />
+      {/* Soft Overhead Ceiling Lights over central walkways */}
+      <pointLight position={[0, 7.5, 0]} color="#FFF8F0" intensity={0.45} distance={18} />
+      <pointLight position={[-8, 7, -8]} color="#FFF8F0" intensity={0.35} distance={14} />
+      <pointLight position={[8, 7, -8]} color="#FFF8F0" intensity={0.35} distance={14} />
+      <pointLight position={[-8, 7, 8]} color="#FFF8F0" intensity={0.35} distance={14} />
+      <pointLight position={[8, 7, 8]} color="#FFF8F0" intensity={0.35} distance={14} />
     </group>
   );
 };
-

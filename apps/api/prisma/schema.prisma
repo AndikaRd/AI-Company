@@ -167,6 +167,7 @@ model Department {
   employees     Employee[]
   memories      Memory[]            @relation("DepartmentMemories")
   knowledgeDocs KnowledgeDocument[] @relation("DepartmentKnowledgeDocs")
+  ceoCommands   CeoCommand[]
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
 
@@ -206,6 +207,10 @@ model Employee {
   memories          Memory[]            @relation("EmployeeMemories")
   authoredKnowledge KnowledgeDocument[] @relation("AuthoredKnowledgeDocs")
   memoryAccessLogs  MemoryAccessLog[]   @relation("AccessedMemories")
+  needs             EmployeeNeeds?
+  lifeState         EmployeeLifeState?
+  lifeEvents        EmployeeLifeEvent[]
+  ceoCommands       CeoCommand[]
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
 
@@ -285,6 +290,8 @@ model Task {
   approvalRequests      ApprovalRequest[]
   agentMessages         AgentMessage[]
   memories              Memory[]          @relation("TaskMemories")
+  activeLifeStates      EmployeeLifeState[]
+  ceoCommands           CeoCommand[]
   createdAt             DateTime          @default(now()) @map("created_at")
   updatedAt             DateTime          @updatedAt @map("updated_at")
 
@@ -489,4 +496,101 @@ model MemoryAccessLog {
   @@index([accessedByEmployeeId])
   @@index([taskId])
   @@map("memory_access_logs")
+}
+
+enum LifeBehaviorState {
+  WORKING
+  DRINKING
+  EATING
+  RESTING
+  SOCIALIZING
+  WALKING
+  RETURNING_TO_DESK
+  ATTENDING_MEETING
+  IDLE
+}
+
+model EmployeeNeeds {
+  id          String   @id @default(uuid())
+  employeeId  String   @unique @map("employee_id")
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  energy      Float    @default(100.0) // 0 - 100 (100 = fully rested, 0 = exhausted)
+  hunger      Float    @default(100.0) // 0 - 100 (100 = fully satiated, 0 = starving)
+  thirst      Float    @default(100.0) // 0 - 100 (100 = fully hydrated, 0 = parched)
+  focus       Float    @default(100.0) // 0 - 100 (100 = deep focus, 0 = burned out)
+  social      Float    @default(100.0) // 0 - 100 (100 = socially fulfilled, 0 = lonely)
+  mood        Float    @default(100.0) // 0 - 100 (100 = ecstatic/motivated, 0 = demoralized)
+  lastUpdated DateTime @default(now()) @map("last_updated")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([employeeId])
+  @@map("employee_needs")
+}
+
+model EmployeeLifeState {
+  id                    String             @id @default(uuid())
+  employeeId            String             @unique @map("employee_id")
+  employee              Employee           @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  behavior              LifeBehaviorState  @default(IDLE)
+  currentLocationId     String             @default("workstation") @map("current_location_id")
+  currentLocationName   String             @default("Workstation") @map("current_location_name")
+  destinationLocationId String?            @map("destination_location_id")
+  activeTaskId          String?            @map("active_task_id")
+  activeTask            Task?              @relation(fields: [activeTaskId], references: [id], onDelete: SetNull)
+  currentThought        String?            @map("current_thought")
+  behaviorStartedAt     DateTime           @default(now()) @map("behavior_started_at")
+  behaviorExpectedEndAt DateTime?          @map("behavior_expected_end_at")
+  interruptedBehavior   LifeBehaviorState? @map("interrupted_behavior")
+  lastSimulationUpdate  DateTime           @default(now()) @map("last_simulation_update")
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+
+  @@index([employeeId])
+  @@index([behavior])
+  @@index([currentLocationId])
+  @@map("employee_life_states")
+}
+
+model EmployeeLifeEvent {
+  id            String            @id @default(uuid())
+  employeeId    String            @map("employee_id")
+  employee      Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  eventType     String            @map("event_type")
+  behavior      LifeBehaviorState
+  locationId    String?           @map("location_id")
+  locationName  String?           @map("location_name")
+  details       String?           @db.Text
+  thought       String?
+  needsSnapshot Json?             @map("needs_snapshot")
+  createdAt     DateTime          @default(now()) @map("created_at")
+
+  @@index([employeeId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@map("employee_life_events")
+}
+
+model CeoCommand {
+  id                    String        @id @default(uuid())
+  targetType            String        @map("target_type") // COMPANY | DEPARTMENT | EMPLOYEE
+  targetId              String?       @map("target_id")
+  targetName            String        @map("target_name")
+  instruction           String        @db.Text
+  status                String        @default("PENDING") // PENDING | ACKNOWLEDGED | IN_PROGRESS | COMPLETED | FAILED
+  response              String?       @db.Text
+  createdTaskId         String?       @map("created_task_id")
+  createdTask           Task?         @relation(fields: [createdTaskId], references: [id], onDelete: SetNull)
+  assignedEmployeeId    String?       @map("assigned_employee_id")
+  assignedEmployee      Employee?     @relation(fields: [assignedEmployeeId], references: [id], onDelete: SetNull)
+  departmentId          String?       @map("department_id")
+  department            Department?   @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  metadata              Json?
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+
+  @@index([targetType])
+  @@index([status])
+  @@index([assignedEmployeeId])
+  @@map("ceo_commands")
 }

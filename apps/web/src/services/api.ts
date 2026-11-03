@@ -23,6 +23,13 @@ import {
   RetrievedMemoryItem,
   MemoryAccessLog,
   EmployeeActivityInfo,
+  EmployeeNeedsData,
+  EmployeeLifeStateData,
+  EmployeeLifeEventData,
+  CompanyFeedItem,
+  FeedCategory,
+  CeoCommandPayload,
+  CeoCommandResult,
 } from '@vac/shared';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
@@ -334,6 +341,66 @@ class ApiService {
 
   async getEmployeeActivity(id: string): Promise<EmployeeActivityInfo> {
     return this.request(`/employees/${id}/activity`);
+  }
+
+  // --- Sprint 7: Employee Life Simulation ---
+
+  async getLifeSimulationStatus(): Promise<{
+    simulationEngine: string;
+    timestamp: string;
+    employeesCount: number;
+    facilitiesCount: number;
+    needs: Record<string, EmployeeNeedsData>;
+    lifeStates: Record<string, EmployeeLifeStateData>;
+  }> {
+    return this.request('/life-simulation/status');
+  }
+
+  async getEmployeeLifeDetail(id: string): Promise<{
+    employeeId: string;
+    needs: EmployeeNeedsData;
+    lifeState: EmployeeLifeStateData;
+    recentEvents: EmployeeLifeEventData[];
+  }> {
+    return this.request(`/life-simulation/employees/${id}`);
+  }
+
+  async triggerSimulationTick(simulatedElapsedSeconds = 10): Promise<any> {
+    return this.request('/life-simulation/tick', {
+      method: 'POST',
+      body: JSON.stringify({ simulatedElapsedSeconds }),
+    });
+  }
+
+  async interveneEmployee(
+    id: string,
+    action: 'drink' | 'eat' | 'rest' | 'work' | 'reset',
+  ): Promise<any> {
+    return this.request(`/life-simulation/employees/${id}/intervene`, {
+      method: 'POST',
+      body: JSON.stringify({ action }),
+    });
+  }
+
+  // --- Sprint 6.7: Company Feed & CEO Command Input ---
+
+  async getCompanyFeed(category?: FeedCategory, limit = 50): Promise<CompanyFeedItem[]> {
+    const params = new URLSearchParams();
+    if (category && category !== 'ALL') params.append('category', category);
+    if (limit) params.append('limit', String(limit));
+    const qs = params.toString();
+    return this.request(`/company-feed${qs ? `?${qs}` : ''}`);
+  }
+
+  async dispatchCeoCommand(payload: CeoCommandPayload): Promise<CeoCommandResult> {
+    return this.request('/company-feed/ceo-command', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async getCeoCommands(limit = 20): Promise<CeoCommandResult[]> {
+    return this.request(`/company-feed/ceo-commands?limit=${limit}`);
   }
 }
 

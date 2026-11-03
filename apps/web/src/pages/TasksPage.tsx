@@ -58,54 +58,44 @@ export const TasksPage: React.FC = () => {
       id: 'backlog',
       title: 'Backlog / Planning',
       statuses: ['PENDING', 'PLANNING'],
-      color: 'text-slate-400',
-      border: 'border-slate-800',
     },
     {
       id: 'in_progress',
       title: 'In Progress',
       statuses: ['IN_PROGRESS'],
-      color: 'text-amber-400',
-      border: 'border-amber-500/30',
     },
     {
       id: 'waiting_approval',
-      title: 'Waiting CEO Approval',
+      title: 'Awaiting Approval',
       statuses: ['WAITING_APPROVAL'],
-      color: 'text-rose-400',
-      border: 'border-rose-500/40',
     },
     {
       id: 'review',
       title: 'Review & Verification',
       statuses: ['REVIEW'],
-      color: 'text-cyan-400',
-      border: 'border-cyan-500/30',
     },
     {
       id: 'completed',
       title: 'Completed',
       statuses: ['COMPLETED'],
-      color: 'text-emerald-400',
-      border: 'border-emerald-500/30',
     },
   ];
 
   return (
     <div className="h-full overflow-y-auto p-6 sm:p-8 max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-border pb-5">
         <div>
           <div className="flex items-center gap-2.5">
-            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-              Task Orchestration & Tool Execution
+            <h2 className="text-xl sm:text-2xl font-bold text-primary-text tracking-tight">
+              Task Engine & Orchestration
             </h2>
-            <Badge variant="success" dot>
-              Engine Active
+            <Badge variant="primary">
+              {tasks.length} Total Tasks
             </Badge>
           </div>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Autonomous agent sandbox execution, live tool calling audit trail, and human-in-the-loop CEO approvals.
+          <p className="text-xs sm:text-sm text-secondary-text mt-1">
+            Autonomous agent workflow execution, live tool calling logs, and CEO authorization gates.
           </p>
         </div>
 
@@ -113,13 +103,13 @@ export const TasksPage: React.FC = () => {
           <button
             onClick={loadTasksAndApprovals}
             title="Refresh task queue"
-            className="p-2.5 rounded-lg bg-surface border border-surface-border text-slate-400 hover:text-white transition-colors"
+            className="p-2.5 rounded-lg bg-surface border border-surface-border text-secondary-text hover:text-primary-text hover:bg-surface-muted transition-colors shadow-subtle"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-cyan-400' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-primary-600' : ''}`} />
           </button>
           <button
             onClick={() => setIsDispatchModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black text-xs sm:text-sm font-bold transition-all shadow-glow-cyan"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary-500 hover:bg-primary-600 text-white text-xs sm:text-sm font-semibold transition-colors shadow-subtle"
           >
             <Plus className="w-4 h-4" />
             <span>Dispatch New Task</span>
@@ -129,25 +119,25 @@ export const TasksPage: React.FC = () => {
 
       {/* CEO Supervised Approvals Alert Banner */}
       {pendingApprovals.length > 0 && (
-        <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-600/50 shadow-xl flex items-center justify-between gap-4 animate-in fade-in">
+        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 shadow-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400">
-              <ShieldAlert className="w-5 h-5 animate-pulse" />
+            <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center text-amber-700 shrink-0">
+              <ShieldAlert className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                <span>{pendingApprovals.length} Approval Request(s) Pending CEO Authorization</span>
-                <span className="w-2 h-2 rounded-full bg-rose-400 animate-ping" />
+              <h4 className="text-sm font-bold text-amber-900 flex items-center gap-2">
+                <span>{pendingApprovals.length} Approval Request(s) Pending Review</span>
+                <span className="w-2 h-2 rounded-full bg-amber-600 animate-ping" />
               </h4>
-              <p className="text-xs text-rose-300/80 mt-0.5">
-                Risky actions ({pendingApprovals.map((a) => a.toolName).join(', ')}) require your explicit confirmation before proceeding.
+              <p className="text-xs text-amber-800 mt-0.5">
+                Elevated operations ({pendingApprovals.map((a) => a.toolName).join(', ')}) require your authorization before execution.
               </p>
             </div>
           </div>
 
           <button
             onClick={() => setSelectedTaskId(pendingApprovals[0].taskId)}
-            className="px-3.5 py-1.5 rounded-lg bg-rose-500 hover:bg-rose-400 text-black text-xs font-bold transition-all shrink-0"
+            className="px-4 py-2 rounded-lg bg-amber-700 hover:bg-amber-800 text-white text-xs font-semibold transition-colors shadow-subtle shrink-0"
           >
             Review & Authorize
           </button>
@@ -160,24 +150,22 @@ export const TasksPage: React.FC = () => {
           const colTasks = tasks.filter((t) => col.statuses.includes(t.status));
 
           return (
-            <div key={col.id} className="space-y-3">
+            <div key={col.id} className="p-3 bg-surface-muted/50 rounded-2xl border border-surface-border space-y-3">
               {/* Column Header */}
-              <div className="flex items-center justify-between px-2 py-1 text-xs font-semibold text-slate-300">
-                <span className={`flex items-center gap-1.5 ${col.color}`}>
-                  <span>{col.title}</span>
-                </span>
-                <span className="px-2 py-0.5 rounded-full bg-slate-800 text-[10px] text-slate-400 font-mono">
+              <div className="flex items-center justify-between px-1 py-1 text-xs font-bold text-primary-text">
+                <span>{col.title}</span>
+                <Badge variant="neutral" className="text-[10px]">
                   {colTasks.length}
-                </span>
+                </Badge>
               </div>
 
-              {/* Column Dropzone / Cards List */}
-              <div className="space-y-3 min-h-[350px]">
+              {/* Column Cards List */}
+              <div className="space-y-2.5 min-h-[350px]">
                 {colTasks.length === 0 ? (
-                  <Card className={`min-h-[160px] border-dashed ${col.border} bg-surface/30 flex flex-col items-center justify-center p-4 text-center`}>
-                    <Clock className="w-5 h-5 text-slate-600 mb-1.5" />
-                    <span className="text-[11px] text-slate-500 font-medium">No tasks in this lane</span>
-                  </Card>
+                  <div className="min-h-[140px] border border-dashed border-surface-border rounded-xl flex flex-col items-center justify-center p-4 text-center">
+                    <Clock className="w-4 h-4 text-secondary-text mb-1" />
+                    <span className="text-[11px] text-secondary-text">No tasks</span>
+                  </div>
                 ) : (
                   colTasks.map((task) => {
                     const execution = task.executions?.[0];
@@ -187,76 +175,64 @@ export const TasksPage: React.FC = () => {
                       <Card
                         key={task.id}
                         onClick={() => setSelectedTaskId(task.id)}
-                        className={`p-4 cursor-pointer hover:border-cyan-500/50 transition-all bg-surface-elevated/60 border ${col.border} group space-y-3 shadow-md hover:shadow-cyan-950/20`}
+                        className="p-3.5 cursor-pointer hover:border-stone-300 transition-all space-y-2.5"
                       >
-                        <div>
-                          <div className="flex items-start justify-between gap-2">
-                            <span
-                              className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-bold uppercase ${
-                                task.priority === 'CRITICAL' || task.priority === 'HIGH'
-                                  ? 'bg-rose-950/60 text-rose-300 border border-rose-800/40'
-                                  : 'bg-slate-800 text-slate-400'
-                              }`}
-                            >
-                              {task.priority}
-                            </span>
-                            <span className="text-[10px] font-mono text-slate-500">
-                              {task.id.slice(0, 6)}
-                            </span>
-                          </div>
-
-                          <h4 className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors mt-2 line-clamp-2">
-                            {task.title}
-                          </h4>
+                        <div className="flex items-start justify-between gap-2">
+                          <span
+                            className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border ${
+                              task.priority === 'CRITICAL' || task.priority === 'HIGH'
+                                ? 'bg-rose-50 text-rose-800 border-rose-200'
+                                : 'bg-surface-muted text-secondary-text border-surface-border'
+                            }`}
+                          >
+                            {task.priority}
+                          </span>
+                          <span className="text-[10px] text-secondary-text">
+                            #{task.id.slice(0, 6)}
+                          </span>
                         </div>
 
+                        <h4 className="text-xs font-bold text-primary-text line-clamp-2 leading-snug">
+                          {task.title}
+                        </h4>
+
                         {/* Assignee Badge */}
-                        <div className="flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-800/60 pt-2">
-                          <div className="flex items-center gap-1.5">
-                            <Bot className="w-3.5 h-3.5 text-cyan-400" />
-                            <span>
+                        <div className="flex items-center justify-between text-[11px] text-secondary-text border-t border-surface-border pt-2">
+                          <div className="flex items-center gap-1.5 truncate">
+                            <Bot className="w-3.5 h-3.5 text-primary-600 shrink-0" />
+                            <span className="truncate">
                               {task.assignedEmployee
                                 ? `${task.assignedEmployee.firstName} ${task.assignedEmployee.lastName}`
                                 : 'Alex Mercer'}
                             </span>
                           </div>
 
-                          <div className="flex items-center gap-1.5">
+                          {/* Subtask Tree indicator */}
+                          {task.subtasks && task.subtasks.length > 0 && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedTreeTaskId(task.id);
                               }}
-                              className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-cyan-300 transition-colors"
-                              title="View Multi-Agent Task Tree"
+                              className="flex items-center gap-1 text-[10px] text-primary-600 hover:text-primary-800 font-medium"
+                              title="View subtask delegation tree"
                             >
-                              <GitBranch className="w-3.5 h-3.5" />
+                              <GitBranch className="w-3 h-3" />
+                              <span>{task.subtasks.length}</span>
                             </button>
-                            {toolLogs.length > 0 && (
-                              <span className="flex items-center gap-1 font-mono text-[10px] text-slate-500">
-                                <Terminal className="w-3 h-3 text-cyan-400" />
-                                {toolLogs.length}
-                              </span>
-                            )}
-                          </div>
+                          )}
                         </div>
 
-                        {/* Latest Tool Activity Pill */}
+                        {/* Tool execution logs count */}
                         {toolLogs.length > 0 && (
-                          <div className="flex flex-wrap gap-1 pt-1">
-                            {toolLogs.slice(0, 2).map((log, idx) => (
-                              <span
-                                key={idx}
-                                className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-[9px] font-mono text-cyan-300 truncate max-w-[120px]"
-                              >
-                                {log.toolName}
-                              </span>
-                            ))}
-                            {toolLogs.length > 2 && (
-                              <span className="text-[9px] font-mono text-slate-500 self-center">
-                                +{toolLogs.length - 2}
-                              </span>
-                            )}
+                          <div className="flex items-center justify-between text-[10px] text-secondary-text bg-surface-muted/60 p-1.5 rounded-lg border border-surface-border">
+                            <span className="flex items-center gap-1 font-mono">
+                              <Terminal className="w-3 h-3 text-secondary-text" />
+                              <span>{toolLogs.length} audit logs</span>
+                            </span>
+                            <span className="font-semibold text-primary-text">
+                              {toolLogs[toolLogs.length - 1].toolName}
+                            </span>
                           </div>
                         )}
                       </Card>
@@ -269,7 +245,7 @@ export const TasksPage: React.FC = () => {
         })}
       </div>
 
-      {/* Task Execution Detail Drawer */}
+      {/* Task Execution Audit Drawer */}
       <TaskExecutionDrawer
         taskId={selectedTaskId}
         isOpen={Boolean(selectedTaskId)}
@@ -277,22 +253,20 @@ export const TasksPage: React.FC = () => {
         onTaskUpdated={loadTasksAndApprovals}
       />
 
-      {/* Multi-Agent Task Tree Drawer */}
+      {/* Subtask Delegation Tree Drawer */}
       <TaskTreeDrawer
         taskId={selectedTreeTaskId}
         isOpen={Boolean(selectedTreeTaskId)}
         onClose={() => setSelectedTreeTaskId(null)}
-        onRefresh={loadTasksAndApprovals}
       />
 
-      {/* Dispatch New Task Modal */}
+      {/* Dispatch Task Modal */}
       <DispatchTaskModal
         isOpen={isDispatchModalOpen}
         onClose={() => setIsDispatchModalOpen(false)}
         employees={employees}
-        onTaskCreated={() => {
-          loadTasksAndApprovals();
-        }}
+        onTaskCreated={loadTasksAndApprovals}
+        onSuccess={loadTasksAndApprovals}
       />
     </div>
   );

@@ -5,23 +5,19 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
   hoverable?: boolean;
-  glow?: 'blue' | 'cyan' | 'none';
 }
 
 export const Card: React.FC<CardProps> = ({
   children,
   className,
   hoverable = false,
-  glow = 'none',
   ...props
 }) => {
   return (
     <div
       className={clsx(
-        'bg-surface/80 backdrop-blur-md border border-surface-border rounded-xl p-5 shadow-lg transition-all duration-200',
-        hoverable && 'hover:border-slate-500 hover:bg-surface/90 cursor-pointer',
-        glow === 'blue' && 'shadow-glow-blue border-primary-500/40',
-        glow === 'cyan' && 'shadow-glow-cyan border-cyan-500/40',
+        'bg-surface border border-surface-border rounded-xl p-5 shadow-subtle transition-all duration-150',
+        hoverable && 'hover:border-stone-300 hover:shadow-card cursor-pointer',
         className,
       )}
       {...props}
@@ -30,4 +26,3 @@ export const Card: React.FC<CardProps> = ({
     </div>
   );
 };
-

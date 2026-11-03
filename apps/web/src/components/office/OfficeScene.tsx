@@ -1,45 +1,14 @@
-import React, { useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import React from 'react';
+import { Canvas } from '@react-three/fiber';
+import { PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
 import { OfficeFloor } from './OfficeFloor';
 import { OfficeWalls } from './OfficeWalls';
 import { OfficeFurniture } from './OfficeFurniture';
 import { OfficeLighting } from './OfficeLighting';
+import { OfficeCharactersLayer } from './OfficeCharactersLayer';
+import { DualCameraController } from './DualCameraController';
 import { DepartmentZoneTags } from './DepartmentZoneTag';
-import { useOfficeStore } from '../../store/useOfficeStore';
-
-// Camera transition controller
-const CameraController: React.FC = () => {
-  const { cameraPosition, cameraTarget } = useOfficeStore();
-  const controlsRef = useRef<any>(null);
-
-  useFrame(({ camera }) => {
-    if (controlsRef.current) {
-      // Smoothly interpolate camera position towards target preset
-      camera.position.lerp(new THREE.Vector3(...cameraPosition), 0.05);
-      controlsRef.current.target.lerp(new THREE.Vector3(...cameraTarget), 0.05);
-      controlsRef.current.update();
-    }
-  });
-
-  return (
-    <OrbitControls
-      ref={controlsRef}
-      enableDamping
-      dampingFactor={0.05}
-      enablePan={true}
-      enableZoom={true}
-      enableRotate={true}
-      minDistance={6}
-      maxDistance={65}
-      maxPolarAngle={Math.PI / 2.05} // Prevent camera clipping below floor plane
-      panSpeed={1.2}
-      rotateSpeed={0.8}
-      zoomSpeed={1.0}
-    />
-  );
-};
 
 interface OfficeSceneProps {
   onSelectAgent?: (employeeId: string) => void;
@@ -47,7 +16,7 @@ interface OfficeSceneProps {
 
 export const OfficeScene: React.FC<OfficeSceneProps> = ({ onSelectAgent }) => {
   return (
-    <div className="w-full h-full relative bg-[#070b14]">
+    <div className="w-full h-full relative bg-[#F4EBDD]">
       <Canvas
         shadows
         dpr={[1, 2]}
@@ -55,10 +24,16 @@ export const OfficeScene: React.FC<OfficeSceneProps> = ({ onSelectAgent }) => {
           antialias: true,
           powerPreference: 'high-performance',
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.1,
+          toneMappingExposure: 1.25,
         }}
       >
-        {/* Isometric Perspective Camera */}
+        {/* Warm Cream Sky / Horizon Color */}
+        <color attach="background" args={['#F4EBDD']} />
+
+        {/* Soft atmospheric fog blending distant boundaries */}
+        <fog attach="fog" args={['#F4EBDD', 42, 95]} />
+
+        {/* Perspective Camera with Default Isometric Vantage Point */}
         <PerspectiveCamera
           makeDefault
           position={[24, 26, 24]}
@@ -67,16 +42,19 @@ export const OfficeScene: React.FC<OfficeSceneProps> = ({ onSelectAgent }) => {
           far={1000}
         />
 
-        {/* Orbit Controls & Camera Transition */}
-        <CameraController />
+        {/* Dual Camera Controller: Overview (fixed isometric) vs Explore (orbit/pan/zoom) */}
+        <DualCameraController />
 
-        {/* Environment Lights & Shadows */}
+        {/* Warm Natural Daylight & Fill Lighting */}
         <OfficeLighting />
 
-        {/* 3D Office Geometry Elements */}
+        {/* 3D Office Modular Environment Elements */}
         <OfficeFloor />
         <OfficeWalls />
         <OfficeFurniture onSelectAgent={onSelectAgent} />
+
+        {/* Autonomous AI Employee Characters Layer */}
+        <OfficeCharactersLayer onSelectAgent={onSelectAgent} />
 
         {/* 3D Floating Zone Tags */}
         <DepartmentZoneTags />

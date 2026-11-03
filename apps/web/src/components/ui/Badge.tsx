@@ -15,29 +15,29 @@ export const Badge: React.FC<BadgeProps> = ({
   dot = false,
 }) => {
   const variantStyles = {
-    primary: 'bg-primary-500/10 text-primary-400 border-primary-500/30',
-    success: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
-    warning: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
-    danger: 'bg-rose-500/10 text-rose-400 border-rose-500/30',
-    info: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30',
-    neutral: 'bg-slate-800 text-slate-300 border-slate-700',
-    placeholder: 'bg-purple-500/10 text-purple-400 border-purple-500/30 ring-1 ring-purple-500/20',
+    primary: 'bg-primary-50 text-primary-800 border-primary-200',
+    success: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    warning: 'bg-amber-50 text-amber-800 border-amber-200',
+    danger: 'bg-rose-50 text-rose-800 border-rose-200',
+    info: 'bg-sky-50 text-sky-800 border-sky-200',
+    neutral: 'bg-stone-100 text-stone-700 border-stone-200',
+    placeholder: 'bg-stone-100 text-stone-600 border-stone-200',
   };
 
   const dotColors = {
-    primary: 'bg-primary-400',
-    success: 'bg-emerald-400',
-    warning: 'bg-amber-400',
-    danger: 'bg-rose-400',
-    info: 'bg-cyan-400',
-    neutral: 'bg-slate-400',
-    placeholder: 'bg-purple-400 animate-pulse',
+    primary: 'bg-primary-600',
+    success: 'bg-emerald-600',
+    warning: 'bg-amber-600',
+    danger: 'bg-rose-600',
+    info: 'bg-sky-600',
+    neutral: 'bg-stone-400',
+    placeholder: 'bg-stone-400',
   };
 
   return (
     <span
       className={clsx(
-        'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border tracking-wide uppercase',
+        'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border',
         variantStyles[variant],
         className,
       )}
@@ -47,4 +47,3 @@ export const Badge: React.FC<BadgeProps> = ({
     </span>
   );
 };
-

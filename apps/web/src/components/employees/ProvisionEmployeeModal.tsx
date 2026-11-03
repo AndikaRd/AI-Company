@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DepartmentWithCounts, SeniorityLevel, AutonomyLevel, AiProvider } from '@vac/shared';
 import { api } from '../../services/api';
+import { useCompanyStore } from '../../store/useCompanyStore';
 import {
   X,
   Bot,
@@ -16,16 +17,20 @@ import {
 interface ProvisionEmployeeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  departments: DepartmentWithCounts[];
-  onEmployeeCreated: () => void;
+  departments?: DepartmentWithCounts[];
+  onEmployeeCreated?: () => void;
+  onSuccess?: () => void;
 }
 
 export const ProvisionEmployeeModal: React.FC<ProvisionEmployeeModalProps> = ({
   isOpen,
   onClose,
-  departments,
+  departments: propDepartments,
   onEmployeeCreated,
+  onSuccess,
 }) => {
+  const storeDepartments = useCompanyStore((s) => s.departments);
+  const departments = propDepartments && propDepartments.length > 0 ? propDepartments : storeDepartments;
   // Form State
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -163,7 +168,8 @@ export const ProvisionEmployeeModal: React.FC<ProvisionEmployeeModalProps> = ({
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
-        onEmployeeCreated();
+        onEmployeeCreated?.();
+        onSuccess?.();
         onClose();
       }, 1200);
     } catch (err: any) {

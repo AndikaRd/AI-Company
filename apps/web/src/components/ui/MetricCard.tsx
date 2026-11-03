@@ -10,9 +10,8 @@ interface MetricCardProps {
   subValue?: string;
   icon: LucideIcon;
   iconColor?: string;
-  isLiveDb?: boolean;
-  tooltip?: string;
   statusText?: string;
+  statusVariant?: 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'neutral';
 }
 
 export const MetricCard: React.FC<MetricCardProps> = ({
@@ -20,52 +19,41 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   value,
   subValue,
   icon: Icon,
-  iconColor = 'text-primary-400',
-  isLiveDb = false,
+  iconColor = 'text-primary-600',
   statusText,
+  statusVariant = 'success',
 }) => {
   return (
     <Card className="relative overflow-hidden group">
       <div className="flex items-start justify-between">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-slate-400 tracking-wider uppercase">
-              {label}
-            </span>
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold tracking-tight text-white font-mono">
+          <span className="text-xs font-semibold text-secondary-text">
+            {label}
+          </span>
+          <div className="flex items-baseline gap-2 pt-1">
+            <span className="text-2xl font-bold tracking-tight text-primary-text">
               {value}
             </span>
             {subValue && (
-              <span className="text-xs font-medium text-slate-400">
+              <span className="text-xs text-secondary-text font-normal">
                 {subValue}
               </span>
             )}
           </div>
         </div>
 
-        <div className={clsx('p-3 rounded-xl bg-surface-elevated/80 border border-slate-700/60', iconColor)}>
+        <div className={clsx('p-2.5 rounded-xl bg-surface-muted border border-surface-border', iconColor)}>
           <Icon className="w-5 h-5" />
         </div>
       </div>
 
-      <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
-        {isLiveDb ? (
-          <Badge variant="success" dot className="font-mono text-[10px]">
-            Live DB Verified
+      {statusText && (
+        <div className="mt-3 pt-2.5 border-t border-surface-border flex items-center justify-between text-xs">
+          <Badge variant={statusVariant} dot className="text-[11px]">
+            {statusText}
           </Badge>
-        ) : (
-          <Badge variant="placeholder" dot className="font-mono text-[10px]">
-            Placeholder (Sprint 2)
-          </Badge>
-        )}
-
-        <span className="text-slate-500 font-mono text-[11px]">
-          {statusText || (isLiveDb ? 'PostgreSQL Query' : 'Awaiting Engine')}
-        </span>
-      </div>
+        </div>
+      )}
     </Card>
   );
 };
-

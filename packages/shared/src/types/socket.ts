@@ -15,6 +15,24 @@ export enum SocketEvents {
   AGENT_MESSAGE_CREATED = 'agent:message_created',
   EMPLOYEE_LOCATION_UPDATED = 'employee:location_updated',
 
+  // Sprint 7: Employee Life Simulation Events
+  EMPLOYEE_STARTED_WORKING = 'employee:started_working',
+  EMPLOYEE_NEEDS_UPDATED = 'employee:needs_updated',
+  EMPLOYEE_NEED_THRESHOLD_REACHED = 'employee:need_threshold_reached',
+  EMPLOYEE_STARTED_BREAK = 'employee:started_break',
+  EMPLOYEE_STARTED_DRINKING = 'employee:started_drinking',
+  EMPLOYEE_STARTED_EATING = 'employee:started_eating',
+  EMPLOYEE_STARTED_RESTING = 'employee:started_resting',
+  EMPLOYEE_STARTED_SOCIALIZING = 'employee:started_socializing',
+  EMPLOYEE_CHANGED_LOCATION = 'employee:changed_location',
+  EMPLOYEE_RESUMED_WORK = 'employee:resumed_work',
+  SIMULATION_TICK = 'simulation:tick',
+
+  // Sprint 6.7: Company Feed & CEO Command Events
+  COMPANY_FEED_ITEM_ADDED = 'company:feed_item_added',
+  CEO_INSTRUCTION_DISPATCHED = 'ceo:instruction_dispatched',
+  CEO_INSTRUCTION_UPDATED = 'ceo:instruction_updated',
+
   // Office Interaction
   OFFICE_ZONE_ENTERED = 'office:zone_entered',
   OFFICE_ZONE_LEFT = 'office:zone_left',

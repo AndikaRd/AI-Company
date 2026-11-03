@@ -41,25 +41,25 @@ export const HierarchyPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-border pb-5">
         <div>
           <div className="flex items-center gap-2.5">
-            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-              <Network className="w-6 h-6 text-cyan-400" />
-              <span>Multi-Agent Organizational Hierarchy</span>
+            <h2 className="text-xl sm:text-2xl font-bold text-primary-text tracking-tight flex items-center gap-2">
+              <Network className="w-6 h-6 text-primary-600" />
+              <span>Multi-Agent Organization & Delegation</span>
             </h2>
-            <Badge variant="primary" dot>
-              Sprint 4 Live
+            <Badge variant="primary">
+              Executive Hierarchy
             </Badge>
           </div>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Supervisory reporting lines, cross-department task delegation, and internal agent communication.
+          <p className="text-xs sm:text-sm text-secondary-text mt-1">
+            Supervisory reporting lines, cross-department task delegation, and correlated inter-agent communications.
           </p>
         </div>
 
         <button
           onClick={loadHierarchy}
           disabled={isLoading}
-          className="px-3.5 py-2 rounded-xl bg-surface border border-surface-border hover:border-cyan-500/40 text-xs font-medium text-slate-300 hover:text-white flex items-center gap-2 transition-all self-start sm:self-auto shadow-sm"
+          className="px-3.5 py-2 rounded-lg bg-surface border border-surface-border hover:bg-surface-muted text-xs font-semibold text-primary-text flex items-center gap-2 transition-colors self-start sm:self-auto shadow-subtle"
         >
-          <RefreshCw className={clsx('w-3.5 h-3.5 text-cyan-400', isLoading && 'animate-spin')} />
+          <RefreshCw className={clsx('w-3.5 h-3.5 text-primary-600', isLoading && 'animate-spin')} />
           <span>Refresh Structure</span>
         </button>
       </div>
@@ -69,50 +69,44 @@ export const HierarchyPage: React.FC = () => {
         <button
           onClick={() => setActiveTab('TREE')}
           className={clsx(
-            'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
+            'flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors',
             activeTab === 'TREE'
-              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-surface-elevated',
+              ? 'bg-surface border border-surface-border text-primary-text shadow-subtle'
+              : 'text-secondary-text hover:text-primary-text hover:bg-surface-muted',
           )}
         >
-          <GitBranch className="w-4 h-4" />
+          <GitBranch className="w-4 h-4 text-primary-600" />
           <span>Organizational Chart</span>
         </button>
 
         <button
           onClick={() => setActiveTab('COMMS')}
           className={clsx(
-            'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
+            'flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors',
             activeTab === 'COMMS'
-              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-surface-elevated',
+              ? 'bg-surface border border-surface-border text-primary-text shadow-subtle'
+              : 'text-secondary-text hover:text-primary-text hover:bg-surface-muted',
           )}
         >
-          <MessageSquare className="w-4 h-4" />
-          <span>Internal Agent Communications</span>
+          <MessageSquare className="w-4 h-4 text-primary-600" />
+          <span>Agent-to-Agent Messages</span>
         </button>
       </div>
 
-      {/* Tab Contents */}
-      {activeTab === 'TREE' && (
-        <div className="space-y-6">
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-20 text-slate-400 font-mono text-xs space-y-2">
-              <div className="w-6 h-6 rounded-full border-2 border-cyan-500/30 border-t-cyan-400 animate-spin" />
-              <span>Resolving Organizational Reporting Trees...</span>
-            </div>
-          ) : (
-            <div className="bg-surface/50 rounded-2xl border border-surface-border p-2 sm:p-6 backdrop-blur-sm">
-              <OrgChartView
-                hierarchy={hierarchy}
-                onChatWithEmployee={(emp) => setActiveChatEmployee(emp)}
-              />
-            </div>
-          )}
+      {/* Content View */}
+      {isLoading ? (
+        <div className="py-20 flex flex-col items-center justify-center space-y-3 text-secondary-text">
+          <RefreshCw className="w-8 h-8 animate-spin text-primary-600" />
+          <p className="text-xs">Resolving organizational reporting structure...</p>
         </div>
+      ) : activeTab === 'TREE' ? (
+        <OrgChartView
+          hierarchy={hierarchy}
+          onChatWithEmployee={(emp) => setActiveChatEmployee(emp)}
+        />
+      ) : (
+        <InternalAgentCommsView />
       )}
-
-      {activeTab === 'COMMS' && <InternalAgentCommsView />}
 
       {/* Chat Drawer */}
       <AgentChatDrawer

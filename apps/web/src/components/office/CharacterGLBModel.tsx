@@ -51,9 +51,9 @@ export const CharacterGLBModel: React.FC<CharacterGLBModelProps> = ({
             child.material = new THREE.MeshStandardMaterial({
               color: '#06b6d4',
               emissive: '#0891b2',
-              emissiveIntensity: 0.4,
-              roughness: 0.2,
-              metalness: 0.8,
+              emissiveIntensity: 0.25,
+              roughness: 0.3,
+              metalness: 0.6,
             });
           } else if (child.name === 'vanguard_Mesh') {
             // Apply navy blue palette tint to match canonical tech hoodie
@@ -72,7 +72,6 @@ export const CharacterGLBModel: React.FC<CharacterGLBModelProps> = ({
   useEffect(() => {
     if (!actions || names.length === 0) return;
 
-    // Determine target clip based on animation mapping
     let targetClipName: string | undefined;
     const upperKey = animationState.toUpperCase();
     const mapping = asset.animationMapping[upperKey];
@@ -95,62 +94,64 @@ export const CharacterGLBModel: React.FC<CharacterGLBModelProps> = ({
     }
   }, [actions, names, animationState, asset]);
 
-  // 5. Procedural Secondary Animation (Breathing, Typing, Head Tilt, Talk nod)
+  // 5. Procedural Secondary Animation
   useFrame((state) => {
     if (!groupRef.current) return;
     const t = state.clock.getElapsedTime();
 
-    // Seated Desk Interaction Motion
     if (animationState === 'working') {
-      // Subtle typing vibration / monitor observation
       groupRef.current.position.y = position[1] + Math.sin(t * 7) * 0.005;
       groupRef.current.rotation.x = Math.sin(t * 2) * 0.02;
     } else if (animationState === 'thinking') {
-      // Pensive slight head tilt
       groupRef.current.rotation.z = Math.sin(t * 1.5) * 0.03;
       groupRef.current.position.y = position[1] + Math.sin(t * 2) * 0.008;
     } else if (animationState === 'talking') {
-      // Expressive conversational nodding
       groupRef.current.rotation.x = Math.sin(t * 5) * 0.04;
       groupRef.current.rotation.y = rotationY + Math.sin(t * 2) * 0.05;
     } else {
-      // Idle natural breathing cycle
       groupRef.current.position.y = position[1] + Math.sin(t * 2) * 0.006;
       groupRef.current.rotation.x = 0;
       groupRef.current.rotation.z = 0;
     }
   });
 
-  const getActivityColor = () => {
+  const getActivityBadge = () => {
     switch (activityState) {
       case 'WORKING':
-        return 'border-cyan-500 text-cyan-300 bg-cyan-950/90 shadow-cyan-500/20';
+        return {
+          label: 'Working',
+          pill: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+          dot: 'bg-emerald-500 animate-pulse',
+        };
       case 'THINKING':
-        return 'border-purple-500 text-purple-300 bg-purple-950/90 shadow-purple-500/20';
+        return {
+          label: 'Thinking',
+          pill: 'bg-purple-50 text-purple-800 border-purple-200',
+          dot: 'bg-purple-500 animate-pulse',
+        };
       case 'TALKING':
-        return 'border-emerald-500 text-emerald-300 bg-emerald-950/90 shadow-emerald-500/20';
+        return {
+          label: 'Discussing',
+          pill: 'bg-cyan-50 text-cyan-800 border-cyan-200',
+          dot: 'bg-cyan-500',
+        };
       case 'WAITING_APPROVAL':
-        return 'border-amber-500 text-amber-300 bg-amber-950/90 shadow-amber-500/20';
+        return {
+          label: 'Review Needed',
+          pill: 'bg-amber-50 text-amber-800 border-amber-200',
+          dot: 'bg-amber-500 animate-ping',
+        };
       case 'IDLE':
       default:
-        return 'border-slate-600 text-slate-300 bg-slate-900/90';
+        return {
+          label: 'Available',
+          pill: 'bg-slate-50 text-slate-700 border-slate-200',
+          dot: 'bg-slate-400',
+        };
     }
   };
 
-  const getActivityDot = () => {
-    switch (activityState) {
-      case 'WORKING':
-        return 'bg-cyan-400 animate-pulse';
-      case 'THINKING':
-        return 'bg-purple-400 animate-pulse';
-      case 'TALKING':
-        return 'bg-emerald-400 animate-pulse';
-      case 'WAITING_APPROVAL':
-        return 'bg-amber-400 animate-ping';
-      default:
-        return 'bg-slate-400';
-    }
-  };
+  const activityBadge = getActivityBadge();
 
   return (
     <group
@@ -176,10 +177,9 @@ export const CharacterGLBModel: React.FC<CharacterGLBModelProps> = ({
       {/* 3D Rigged Humanoid GLB Asset */}
       <primitive object={clonedScene} />
 
-      {/* Alex Mercer Specific Stylized Accessories (Headset & ID Badge) */}
+      {/* Alex Mercer Stylized Accessories */}
       {(employee.employeeCode === 'VAC-ENG-001' || asset.slug === 'alex-mercer') && (
         <group position={[0, 0, 0]}>
-          {/* Audio Headset band & ear cups positioned on head */}
           <group position={[0, 1.62, 0]}>
             <mesh position={[0, 0.08, 0]} rotation={[Math.PI / 2, 0, 0]}>
               <torusGeometry args={[0.12, 0.015, 8, 16, Math.PI]} />
@@ -194,44 +194,40 @@ export const CharacterGLBModel: React.FC<CharacterGLBModelProps> = ({
               <meshStandardMaterial color="#0284c7" />
             </mesh>
           </group>
-
-          {/* VAC ID Card Badge on Torso */}
           <mesh position={[0.08, 1.25, 0.14]} rotation={[0, 0, -0.05]}>
             <boxGeometry args={[0.06, 0.08, 0.005]} />
-            <meshStandardMaterial color="#38bdf8" emissive="#0284c7" emissiveIntensity={0.2} />
+            <meshStandardMaterial color="#38bdf8" />
           </mesh>
         </group>
       )}
 
-      {/* Floating Interactive HUD Tag */}
-      <Html position={[0, 1.85, 0]} center distanceFactor={14}>
+      {/* Clean, Bright Floating HUD Card (Name, Role, Activity) */}
+      <Html position={[0, 1.85, 0]} center distanceFactor={16} zIndexRange={[100, 50]}>
         <div
           onClick={(e) => {
             e.stopPropagation();
             if (onSelectAgent) onSelectAgent(employee.id);
           }}
           className={`cursor-pointer transition-all duration-200 select-none ${
-            isHovered ? 'scale-110 shadow-2xl' : 'scale-100 opacity-95'
+            isHovered ? 'scale-110 shadow-xl' : 'scale-100 opacity-95'
           }`}
         >
-          <div
-            className={`px-3 py-1.5 rounded-xl border backdrop-blur-md shadow-xl flex items-center gap-2 transition-all ${getActivityColor()}`}
-          >
-            <span className={`w-2 h-2 rounded-full ${getActivityDot()}`} />
+          <div className="px-3 py-1.5 rounded-xl bg-white/95 border border-amber-200/80 shadow-md backdrop-blur-md flex items-center gap-2.5 transition-all">
+            <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${activityBadge.dot}`} />
             <div className="flex flex-col text-left">
-              <span className="text-[11px] font-bold text-white tracking-wide flex items-center gap-1.5 whitespace-nowrap">
+              <span className="text-[12px] font-bold text-slate-800 tracking-tight whitespace-nowrap leading-tight">
                 {employee.firstName} {employee.lastName}
-                <span className="text-[9px] font-mono px-1 rounded bg-black/40 text-slate-300 border border-slate-700">
-                  {employee.employeeCode}
-                </span>
               </span>
-              <span className="text-[9px] font-mono flex items-center gap-1">
-                <span className="uppercase font-semibold tracking-wider">[{activityState}]</span>
-                <span>•</span>
-                <span className="text-slate-400 truncate max-w-[120px]">
-                  {taskTitle || employee.role}
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="text-[10px] text-slate-500 font-medium truncate max-w-[130px]">
+                  {taskTitle || employee.jobTitle || employee.role}
                 </span>
-              </span>
+                <span
+                  className={`text-[9px] font-semibold px-1.5 py-0.2 rounded-full border ${activityBadge.pill}`}
+                >
+                  {activityBadge.label}
+                </span>
+              </div>
             </div>
           </div>
         </div>

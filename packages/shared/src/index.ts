@@ -11,4 +11,6 @@ export * from './types/memory';
 export * from './types/health';
 export * from './types/api';
 export * from './types/socket';
+export * from './types/life-simulation';
+export * from './types/company-feed';
 export * from './constants/departments';

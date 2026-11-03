@@ -9,7 +9,6 @@ export const MainLayout: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-    // Poll health every 30 seconds
     const interval = setInterval(() => {
       fetchData();
     }, 30000);
@@ -17,7 +16,7 @@ export const MainLayout: React.FC = () => {
   }, [fetchData]);
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background text-slate-100 font-sans">
+    <div className="flex h-screen w-screen overflow-hidden bg-background text-primary-text font-sans">
       <Sidebar />
       <div className="flex flex-col flex-1 min-w-0 h-screen overflow-hidden">
         <TopNav />
@@ -28,4 +27,3 @@ export const MainLayout: React.FC = () => {
     </div>
   );
 };
-

@@ -1,24 +1,16 @@
 import React from 'react';
-import { useOfficeStore, CAMERA_PRESETS } from '../../store/useOfficeStore';
+import { useOfficeStore } from '../../store/useOfficeStore';
 import { useCompanyStore } from '../../store/useCompanyStore';
-import { Compass } from 'lucide-react';
+import { Map } from 'lucide-react';
 
 interface OfficeMinimapProps {
   onSelectEmployee: (employeeId: string) => void;
 }
 
 export const OfficeMinimap: React.FC<OfficeMinimapProps> = ({ onSelectEmployee }) => {
-  const {
-    activePreset,
-    setPreset,
-    focusPosition,
-    employeeActivities,
-    connectionState,
-  } = useOfficeStore();
+  const { focusPosition, employeeActivities, isSocketConnected } = useOfficeStore();
   const { employees } = useCompanyStore();
 
-  // Coordinates mapping on the 2D minimap canvas (width: 180, height: 180)
-  // Scene bounds approx: X from -14 to +14, Z from -14 to +14
   const mapSceneToMinimap = (x: number, z: number): [number, number] => {
     const minX = -15;
     const maxX = 15;
@@ -29,150 +21,140 @@ export const OfficeMinimap: React.FC<OfficeMinimapProps> = ({ onSelectEmployee }
     return [px, pz];
   };
 
-  const getDepartmentCoordinates = (deptSlug: string): [number, number] => {
-    switch (deptSlug) {
-      case 'technology':
-        return [-8, -8];
-      case 'engineering':
-        return [0, -8];
-      case 'research':
-        return [8, -8];
-      case 'operations':
-        return [-8, 8];
-      case 'quality-assurance':
-        return [0, 8];
-      case 'conference':
-        return [8, 8];
-      default:
-        return [0, 0];
-    }
+  const getAgentPosition = (employee: any): [number, number] => {
+    const ws = (employee.workstationId || '').toLowerCase();
+    if (ws.includes('tech') || employee.department?.slug === 'technology') return [-9, -9];
+    if (ws.includes('eng') || employee.department?.slug === 'engineering') return [-1, -9];
+    if (ws.includes('res') || employee.department?.slug === 'research') return [7, -9];
+    if (ws.includes('ops') || employee.department?.slug === 'operations') return [-8, 7];
+    if (ws.includes('qa') || employee.department?.slug === 'quality-assurance') return [-1, 8];
+    return [0, 0];
   };
 
   const getActivityColor = (employeeId: string) => {
     const act = employeeActivities[employeeId]?.activity;
     switch (act) {
       case 'WORKING':
-        return 'bg-cyan-400 ring-cyan-400/50';
+        return 'bg-emerald-500 text-white';
       case 'THINKING':
-        return 'bg-purple-400 ring-purple-400/50';
+        return 'bg-purple-500 text-white';
       case 'TALKING':
-        return 'bg-emerald-400 ring-emerald-400/50';
+        return 'bg-cyan-500 text-white';
       case 'WAITING_APPROVAL':
-        return 'bg-amber-400 ring-amber-400/50';
+        return 'bg-amber-500 text-white';
       case 'IDLE':
       default:
-        return 'bg-slate-400 ring-slate-400/30';
+        return 'bg-slate-400 text-white';
     }
   };
 
   return (
-    <div className="absolute bottom-6 left-6 z-30 flex flex-col gap-2 select-none">
-      {/* Minimap Radar Container */}
-      <div className="w-52 h-52 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-md p-3 flex flex-col justify-between overflow-hidden relative">
-        {/* Radar Header */}
-        <div className="flex items-center justify-between z-10">
-          <div className="flex items-center gap-1.5 text-[11px] font-bold tracking-wider text-slate-300 font-mono uppercase">
-            <Compass className="w-3.5 h-3.5 text-cyan-400" />
-            <span>HQ Radar</span>
+    <div className="absolute bottom-6 left-6 z-30 flex flex-col gap-2 select-none pointer-events-auto">
+      {/* 2D Architectural Floorplan Container */}
+      <div className="w-56 h-56 rounded-2xl bg-white/95 border border-amber-200/80 shadow-xl backdrop-blur-md p-3 flex flex-col justify-between overflow-hidden relative">
+        {/* Floorplan Header */}
+        <div className="flex items-center justify-between z-10 pb-1.5 border-b border-amber-100">
+          <div className="flex items-center gap-1.5 text-xs font-bold tracking-tight text-slate-800">
+            <Map className="w-3.5 h-3.5 text-amber-600" />
+            <span>Office Floorplan</span>
           </div>
-          <div className="flex items-center gap-1.5 text-[9px] font-mono">
+          <div className="flex items-center gap-1.5 text-[10px]">
             <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                connectionState === 'CONNECTED'
-                  ? 'bg-emerald-400 animate-pulse'
-                  : connectionState === 'CONNECTING'
-                  ? 'bg-amber-400 animate-ping'
-                  : connectionState === 'ERROR'
-                  ? 'bg-rose-500'
-                  : 'bg-slate-500'
+              className={`w-2 h-2 rounded-full ${
+                isSocketConnected ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'
               }`}
             />
-            <span
-              className={`font-semibold ${
-                connectionState === 'CONNECTED'
-                  ? 'text-emerald-400'
-                  : connectionState === 'CONNECTING'
-                  ? 'text-amber-400'
-                  : connectionState === 'ERROR'
-                  ? 'text-rose-400'
-                  : 'text-slate-400'
-              }`}
-            >
-              {connectionState}
+            <span className="font-medium text-slate-500">
+              {isSocketConnected ? 'Live' : 'Connecting'}
             </span>
           </div>
         </div>
 
-        {/* 2D Blueprint Grid Layout */}
-        <div className="relative w-full h-36 bg-slate-950/80 rounded-xl border border-slate-800/80 overflow-hidden">
-          {/* Subtle grid lines */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b20_1px,transparent_1px),linear-gradient(to_bottom,#1e293b20_1px,transparent_1px)] bg-[size:16px_16px]" />
+        {/* 2D Architectural Floor Layout */}
+        <div className="relative w-full h-36 bg-[#F4EBDD] rounded-xl border border-amber-200/60 overflow-hidden shadow-inner">
+          {/* Main Corridor Crosswalks */}
+          <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-6 bg-white/60" />
+          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-6 bg-white/60" />
 
-          {/* Department Boundary Boxes */}
-          <div className="absolute top-2 left-2 w-14 h-14 rounded border border-cyan-500/20 bg-cyan-500/5 flex items-center justify-center text-[7px] text-cyan-400 font-mono">
-            TECH
+          {/* Department Boundary Tiles */}
+          {/* Technology */}
+          <div className="absolute top-1.5 left-1.5 w-14 h-12 rounded bg-cyan-100/60 border border-cyan-300/60 flex items-center justify-center text-[8px] font-bold text-cyan-800">
+            Tech
           </div>
-          <div className="absolute top-2 left-18 w-14 h-14 rounded border border-emerald-500/20 bg-emerald-500/5 flex items-center justify-center text-[7px] text-emerald-400 font-mono">
-            ENG
+          {/* Engineering */}
+          <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-14 h-12 rounded bg-emerald-100/60 border border-emerald-300/60 flex items-center justify-center text-[8px] font-bold text-emerald-800">
+            Eng
           </div>
-          <div className="absolute top-2 right-2 w-14 h-14 rounded border border-purple-500/20 bg-purple-500/5 flex items-center justify-center text-[7px] text-purple-400 font-mono">
-            RES
+          {/* Research */}
+          <div className="absolute top-1.5 right-1.5 w-14 h-12 rounded bg-purple-100/60 border border-purple-300/60 flex items-center justify-center text-[8px] font-bold text-purple-800">
+            Research
           </div>
-          <div className="absolute bottom-2 left-2 w-14 h-14 rounded border border-blue-500/20 bg-blue-500/5 flex items-center justify-center text-[7px] text-blue-400 font-mono">
-            OPS
+
+          {/* Lounge */}
+          <div className="absolute top-1/2 -translate-y-1/2 left-1.5 w-14 h-10 rounded bg-stone-100/60 border border-stone-300/60 flex items-center justify-center text-[8px] font-bold text-stone-700">
+            Lounge
           </div>
-          <div className="absolute bottom-2 left-18 w-14 h-14 rounded border border-rose-500/20 bg-rose-500/5 flex items-center justify-center text-[7px] text-rose-400 font-mono">
+          {/* Central Atrium */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-emerald-200/70 border border-emerald-400 flex items-center justify-center text-[7px] font-bold text-emerald-800">
+            Tree
+          </div>
+          {/* Pantry */}
+          <div className="absolute top-1/2 -translate-y-1/2 right-1.5 w-14 h-10 rounded bg-amber-100/60 border border-amber-300/60 flex items-center justify-center text-[8px] font-bold text-amber-800">
+            Pantry
+          </div>
+
+          {/* Operations */}
+          <div className="absolute bottom-1.5 left-1.5 w-14 h-12 rounded bg-orange-100/60 border border-orange-300/60 flex items-center justify-center text-[8px] font-bold text-orange-800">
+            Ops
+          </div>
+          {/* QA */}
+          <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-14 h-12 rounded bg-pink-100/60 border border-pink-300/60 flex items-center justify-center text-[8px] font-bold text-pink-800">
             QA
           </div>
-          <div className="absolute bottom-2 right-2 w-14 h-14 rounded border border-indigo-500/20 bg-indigo-500/5 flex items-center justify-center text-[7px] text-indigo-400 font-mono">
-            MEET
+          {/* Meeting Room */}
+          <div className="absolute bottom-1.5 right-1.5 w-14 h-12 rounded bg-amber-100/60 border border-amber-300/60 flex items-center justify-center text-[8px] font-bold text-amber-800">
+            Meeting
           </div>
 
-          {/* Employee Blips */}
+          {/* Real-time Employee Avatars */}
           {employees.map((emp) => {
-            const [x, z] = getDepartmentCoordinates(emp.department?.slug || 'technology');
-            const [px, pz] = mapSceneToMinimap(x, z);
+            const [wx, wz] = getAgentPosition(emp);
+            const [px, pz] = mapSceneToMinimap(wx, wz);
 
             return (
               <button
-                key={emp.id}
-                onClick={() => {
+                key={`minimap-emp-${emp.id}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  focusPosition([wx, 0, wz], `Focus: ${emp.firstName}`);
                   onSelectEmployee(emp.id);
-                  focusPosition([x, 0, z], `${emp.firstName}`);
                 }}
-                title={`${emp.firstName} ${emp.lastName} (${emp.role})`}
-                style={{ left: `${px * 0.9}px`, top: `${pz * 0.75}px` }}
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 group z-20 cursor-pointer"
+                title={`${emp.firstName} ${emp.lastName} (${emp.jobTitle || emp.role})`}
+                style={{
+                  left: `${(px / 180) * 100}%`,
+                  top: `${(pz / 180) * 100}%`,
+                }}
+                className={`absolute -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full shadow-md flex items-center justify-center text-[8px] font-bold border border-white hover:scale-125 transition-transform ${getActivityColor(
+                  emp.id,
+                )}`}
               >
-                <div
-                  className={`w-3 h-3 rounded-full ring-2 transition-all ${getActivityColor(
-                    emp.id,
-                  )} group-hover:scale-150 shadow-md flex items-center justify-center`}
-                >
-                  <span className="text-[7px] font-bold text-black uppercase">
-                    {emp.firstName[0]}
-                  </span>
-                </div>
+                {emp.firstName.charAt(0)}
               </button>
             );
           })}
         </div>
 
-        {/* Quick Camera Navigation Bar */}
-        <div className="flex items-center justify-between gap-1 pt-1 overflow-x-auto">
-          {CAMERA_PRESETS.map((preset) => (
-            <button
-              key={preset.id}
-              onClick={() => setPreset(preset)}
-              className={`px-2 py-0.5 rounded text-[9px] font-mono font-medium transition whitespace-nowrap ${
-                activePreset === preset.id
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
-                  : 'bg-slate-800 text-slate-400 hover:text-white'
-              }`}
-            >
-              {preset.name.split(' ')[0]}
-            </button>
-          ))}
+        {/* Legend */}
+        <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-amber-100">
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" /> Working
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-purple-500" /> Thinking
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-slate-400" /> Available
+          </span>
         </div>
       </div>
     </div>

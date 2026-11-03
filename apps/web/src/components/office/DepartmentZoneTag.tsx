@@ -13,7 +13,6 @@ export const DepartmentZoneTags: React.FC = () => {
   return (
     <group position={[0, 0, 0]}>
       {INITIAL_DEPARTMENTS.map((dept: InitialDepartmentDefinition) => {
-        // Find matching backend department data for dynamic counts
         const backendDept = departments.find(
           (d) => d.slug === dept.slug || d.name.toLowerCase() === dept.name.toLowerCase(),
         );
@@ -26,9 +25,9 @@ export const DepartmentZoneTags: React.FC = () => {
         return (
           <group
             key={`tag-${dept.slug}`}
-            position={[dept.zoneBounds.x, 2.5, dept.zoneBounds.z]}
+            position={[dept.zoneBounds.x, 3.4, dept.zoneBounds.z]}
           >
-            <Html center distanceFactor={22} zIndexRange={[100, 0]}>
+            <Html center distanceFactor={24} zIndexRange={[50, 0]}>
               <div
                 onClick={(e) => {
                   e.stopPropagation();
@@ -44,25 +43,25 @@ export const DepartmentZoneTags: React.FC = () => {
                 }}
                 onMouseEnter={() => setHoveredZone(dept.slug)}
                 onMouseLeave={() => setHoveredZone(null)}
-                className={`group cursor-pointer select-none transition-all duration-200 transform hover:scale-105 px-2.5 py-1 rounded-lg backdrop-blur-md border shadow-lg flex items-center gap-2 ${
+                className={`cursor-pointer select-none transition-all duration-200 transform hover:scale-105 px-2.5 py-1 rounded-full backdrop-blur-md border shadow-sm flex items-center gap-1.5 ${
                   isSelected
-                    ? 'bg-slate-900/95 border-cyan-400 ring-2 ring-cyan-500/30'
-                    : 'bg-slate-900/80 border-slate-700/80 hover:border-slate-500'
+                    ? 'bg-white border-amber-400 ring-2 ring-amber-300/40 text-slate-900 font-bold'
+                    : 'bg-white/90 border-amber-200/70 hover:border-amber-300 text-slate-700'
                 }`}
               >
                 {/* Department Accent Dot */}
                 <span
-                  className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm"
+                  className="w-2 h-2 rounded-full shrink-0 shadow-sm"
                   style={{ backgroundColor: dept.color }}
                 />
 
                 {/* Department Title */}
-                <span className="text-xs font-semibold text-slate-100 whitespace-nowrap tracking-wide">
+                <span className="text-[11px] font-semibold whitespace-nowrap tracking-tight">
                   {dept.name}
                 </span>
 
-                {/* AI Agents Count Pill */}
-                <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono border border-slate-700">
+                {/* Employee Count Badge */}
+                <span className="text-[9px] font-medium px-1.5 py-0.2 rounded-full bg-amber-50 text-amber-900 border border-amber-200/60">
                   {employeeCount} AI
                 </span>
               </div>
@@ -73,4 +72,3 @@ export const DepartmentZoneTags: React.FC = () => {
     </group>
   );
 };
-

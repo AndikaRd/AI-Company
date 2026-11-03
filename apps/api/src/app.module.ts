@@ -12,6 +12,8 @@ import { ToolsModule } from './modules/tools/tools.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { AgentCommunicationModule } from './modules/agent-communication/agent-communication.module';
 import { MemoryModule } from './modules/memory/memory.module';
+import { LifeSimulationModule } from './modules/life-simulation/life-simulation.module';
+import { CompanyFeedModule } from './modules/company-feed/company-feed.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { MemoryModule } from './modules/memory/memory.module';
     TasksModule,
     AgentCommunicationModule,
     MemoryModule,
+    LifeSimulationModule,
+    CompanyFeedModule,
   ],
 })
 export class AppModule {}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Employee, TaskPriority } from '@vac/shared';
 import { api } from '../../services/api';
+import { useCompanyStore } from '../../store/useCompanyStore';
 import {
   X,
   Play,
@@ -13,16 +14,20 @@ import {
 interface DispatchTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  employees: Employee[];
-  onTaskCreated: () => void;
+  employees?: Employee[];
+  onTaskCreated?: () => void;
+  onSuccess?: () => void;
 }
 
 export const DispatchTaskModal: React.FC<DispatchTaskModalProps> = ({
   isOpen,
   onClose,
-  employees,
+  employees: propEmployees,
   onTaskCreated,
+  onSuccess,
 }) => {
+  const storeEmployees = useCompanyStore((s) => s.employees);
+  const employees = propEmployees && propEmployees.length > 0 ? propEmployees : storeEmployees;
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('HIGH');
@@ -79,7 +84,8 @@ export const DispatchTaskModal: React.FC<DispatchTaskModalProps> = ({
         workspacePath: workspacePath.trim() || undefined,
       });
 
-      onTaskCreated();
+      onTaskCreated?.();
+      onSuccess?.();
       onClose();
     } catch (err: any) {
       console.error('Failed to create task:', err);
